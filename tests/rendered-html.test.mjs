@@ -31,12 +31,14 @@ test("server-renders the CuraFamilia Today experience", async () => {
 });
 
 test("keeps medication actions and responsive navigation", async () => {
-  const [page, layout, css, packageJson, androidActivity] = await Promise.all([
+  const [page, layout, css, packageJson, androidActivity, androidManifest, androidBuild] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../android/app/src/main/java/br/com/curafamilia/app/MainActivity.java", import.meta.url), "utf8"),
+    readFile(new URL("../android/app/src/main/AndroidManifest.xml", import.meta.url), "utf8"),
+    readFile(new URL("../android/app/build.gradle", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /localStorage/);
@@ -81,6 +83,13 @@ test("keeps medication actions and responsive navigation", async () => {
   assert.match(page, /document-filter-tabs/);
   assert.match(page, /document-grid/);
   assert.match(page, /Salvar Documento/);
+  assert.match(page, /Digitalizar documento/);
+  assert.match(page, /CuraFamiliaReceiveScan/);
+  assert.match(page, /startDocumentScanner/);
+  assert.match(page, /Lote digitalizado/);
+  assert.match(page, /scannedDocumentFileName/);
+  assert.match(page, /documento-digitalizado/);
+  assert.match(page, /handleDocumentFile/);
   assert.doesNotMatch(page, /Adicionar Dose/);
   assert.match(layout, /lang="pt-BR"/);
   assert.match(css, /\.mobile-bottom-nav/);
@@ -103,6 +112,8 @@ test("keeps medication actions and responsive navigation", async () => {
   assert.match(css, /\.document-viewer-modal/);
   assert.match(css, /\.document-demo-preview/);
   assert.match(css, /\.pdf-document-pages/);
+  assert.match(css, /\.document-source-actions/);
+  assert.match(css, /\.document-selected-file/);
   assert.match(css, /grid-template-columns: repeat\(5,1fr\)/);
   assert.match(css, /@media \(max-width: 767px\)/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -110,6 +121,16 @@ test("keeps medication actions and responsive navigation", async () => {
   assert.match(androidActivity, /shouldInterceptRequest/);
   assert.match(androidActivity, /DownloadBridge/);
   assert.match(androidActivity, /ACTION_CREATE_DOCUMENT/);
+  assert.match(androidActivity, /GmsDocumentScanning/);
+  assert.match(androidActivity, /SCANNER_MODE_FULL/);
+  assert.match(androidActivity, /RESULT_FORMAT_PDF/);
+  assert.doesNotMatch(androidActivity, /setPageLimit/);
+  assert.match(androidActivity, /scanned-documents/);
+  assert.match(androidActivity, /serveNativeDocument/);
+  assert.match(androidActivity, /saveStoredDocument/);
+  assert.match(androidActivity, /CuraFamiliaReceiveScan/);
+  assert.match(androidBuild, /play-services-mlkit-document-scanner:16\.0\.0/);
+  assert.doesNotMatch(androidManifest, /android\.permission\.CAMERA/);
   assert.doesNotMatch(androidActivity, /file:\/\/\/android_asset/);
   await assert.rejects(access(new URL("../app/_sites-preview", root)));
 });

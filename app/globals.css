@@ -384,9 +384,27 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .document-empty-card button { display: flex; min-height: 48px; align-items: center; gap: 8px; padding: 0 18px; border: 0; border-radius: 12px; background: var(--primary); color: white; font-weight: 650; }
 .documents-local-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0; color: var(--muted); font-size: 13px; }
 .documents-local-note .material-symbols-outlined { font-size: 17px; color: var(--secondary); }
-.document-file-field > span { color: var(--text); }
-.document-file-field input[type="file"] { height: auto; min-height: 64px; padding: 9px; cursor: pointer; }
-.document-file-field input[type="file"]::file-selector-button { min-height: 42px; margin-right: 12px; padding: 0 14px; border: 0; border-radius: 10px; background: var(--primary-soft); color: var(--primary-dark); font-weight: 650; cursor: pointer; }
+.document-file-field { display: grid; grid-column: 1 / -1; gap: 10px; }
+.document-file-field > span { color: var(--text); font-size: 16px; font-weight: 650; }
+.document-file-field > small { color: var(--muted); font-size: 12px; line-height: 18px; }
+.document-source-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.document-source-button { position: relative; display: flex !important; min-height: 58px; align-items: center; justify-content: center; gap: 8px !important; overflow: hidden; padding: 0 14px; border: 1px solid var(--outline); border-radius: 16px; background: var(--background); color: var(--text) !important; cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease; }
+.document-source-button:hover { border-color: var(--primary); background: var(--primary-soft); }
+.document-source-button:active { transform: scale(.98); }
+.document-source-button.scan { border-color: var(--primary); background: var(--primary); color: white !important; }
+.document-source-button.scan:hover { background: var(--primary-dark); }
+.document-source-button input { position: absolute; width: 1px !important; height: 1px !important; opacity: 0; pointer-events: none; }
+.document-source-button:has(input:focus-visible) { outline: 3px solid rgba(164,60,18,.28); outline-offset: 2px; }
+.document-source-button:has(input:disabled) { cursor: wait; opacity: .65; }
+.document-source-button:disabled { cursor: wait; opacity: .65; }
+.document-source-button .material-symbols-outlined { font-size: 21px; }
+.document-selected-file { display: flex; min-width: 0; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid rgba(1,107,84,.22); border-radius: 12px; background: rgba(155,240,210,.2); color: var(--secondary); }
+.document-selected-file > .material-symbols-outlined { flex: 0 0 auto; }
+.document-selected-file > div { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.document-selected-file strong { overflow: hidden; color: var(--text); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.document-selected-file small { color: var(--muted); font-size: 11px; }
+.document-selected-file button { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); }
+.document-selected-file button:hover { background: rgba(1,107,84,.1); color: var(--secondary); }
 .document-viewer-backdrop { padding: 18px; }
 .document-viewer-modal { display: flex; width: min(100%,960px); height: min(90vh,820px); flex-direction: column; overflow: hidden; border-radius: 20px; background: white; box-shadow: 0 24px 80px rgba(0,0,0,.28); animation: medication-modal-in 230ms cubic-bezier(.175,.885,.32,1.275); }
 .document-viewer-modal > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 18px 22px; border-bottom: 1px solid var(--surface-highest); }
@@ -579,6 +597,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 @keyframes member-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 @media (max-width: 480px) {
+  .document-source-actions { grid-template-columns: 1fr; }
   .dose-details-grid { grid-template-columns: 1fr 1fr; gap: 15px 10px; }
   .dose-details-grid strong { font-size: 16px; }
   .agenda-item { grid-template-columns: 47px 36px minmax(95px,1fr) auto; }

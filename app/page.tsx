@@ -11,7 +11,11 @@ declare global {
   interface Window {
     CuraFamiliaAndroid?: {
       saveDocument: (fileName: string, mimeType: string, dataUrl: string) => void;
+      saveStoredDocument?: (documentId: string, fileName: string, mimeType: string) => void;
+      scanDocument?: () => void;
     };
+    CuraFamiliaReceiveScan?: (fileName: string, mimeType: string, documentId: string, fileSize: number) => void;
+    CuraFamiliaScanCancelled?: (message: string) => void;
   }
 }
 
@@ -68,6 +72,8 @@ type HealthDocument = {
   fileName: string;
   mimeType: string;
   dataUrl?: string;
+  nativeDocumentId?: string;
+  fileSize?: number;
 };
 
 type AppState = {
@@ -89,7 +95,14 @@ type TodayDose = {
   isLate: boolean;
 };
 
-function PdfDocumentViewer({ dataUrl, title }: { dataUrl: string; title: string }) {
+type NativeDocumentScan = {
+  fileName: string;
+  mimeType: string;
+  documentId: string;
+  fileSize: number;
+};
+
+function PdfDocumentViewer({ sourceUrl, title }: { sourceUrl: string; title: string }) {
   const pagesRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState("Preparando documento...");
 
@@ -101,10 +114,17 @@ function PdfDocumentViewer({ dataUrl, title }: { dataUrl: string; title: string 
       try {
         const pdfjs = await import("pdfjs-dist");
         pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-        const encoded = dataUrl.slice(dataUrl.indexOf(",") + 1);
-        const binary = window.atob(encoded);
-        const bytes = new Uint8Array(binary.length);
-        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        let bytes: Uint8Array;
+        if (sourceUrl.startsWith("data:")) {
+          const encoded = sourceUrl.slice(sourceUrl.indexOf(",") + 1);
+          const binary = window.atob(encoded);
+          bytes = new Uint8Array(binary.length);
+          for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        } else {
+          const response = await fetch(sourceUrl);
+          if (!response.ok) throw new Error("Documento indisponível");
+          bytes = new Uint8Array(await response.arrayBuffer());
+        }
 
         const loadingTask = pdfjs.getDocument({ data: bytes });
         cancelLoading = () => { void loadingTask.destroy(); };
@@ -146,7 +166,7 @@ function PdfDocumentViewer({ dataUrl, title }: { dataUrl: string; title: string 
       cancelled = true;
       cancelLoading?.();
     };
-  }, [dataUrl, title]);
+  }, [sourceUrl, title]);
 
   return <div className="pdf-document-viewer" aria-label={`PDF: ${title}`}>
     {status && <p className="pdf-viewer-status">{status}</p>}
@@ -212,14 +232,14 @@ function localDateKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-function dateDaysAgo(days: number) {
-  const date = new Date();
+function dateDaysAgo(days: number, referenceDate = new Date()) {
+  const date = new Date(referenceDate);
   date.setDate(date.getDate() - days);
   return localDateKey(date);
 }
 
-function createDemoState(): AppState {
-  const today = localDateKey();
+function createDemoState(referenceDate = new Date()): AppState {
+  const today = localDateKey(referenceDate);
   const members: Member[] = [
     { id: "joao", name: "João", relationship: "Pai", initials: "JO", color: "#a43c12" },
     { id: "ana", name: "Ana", relationship: "Mãe", initials: "AN", color: "#016b54" },
@@ -257,14 +277,14 @@ function createDemoState(): AppState {
   ];
   const logs: DoseLog[] = [
     { id: "demo-1", routineId: "pantoprazol", memberId: "joao", date: today, scheduledTime: "07:00", status: "taken", recordedAt: "07:04" },
-    { id: "demo-2", routineId: "atorvastatina", memberId: "ana", date: dateDaysAgo(1), scheduledTime: "21:00", status: "taken", recordedAt: "21:06" },
-    { id: "demo-3", routineId: "losartana", memberId: "joao", date: dateDaysAgo(1), scheduledTime: "08:00", status: "taken", recordedAt: "08:02" },
-    { id: "demo-4", routineId: "metformina", memberId: "joao", date: dateDaysAgo(2), scheduledTime: "13:00", status: "skipped", recordedAt: "15:20" },
+    { id: "demo-2", routineId: "atorvastatina", memberId: "ana", date: dateDaysAgo(1, referenceDate), scheduledTime: "21:00", status: "taken", recordedAt: "21:06" },
+    { id: "demo-3", routineId: "losartana", memberId: "joao", date: dateDaysAgo(1, referenceDate), scheduledTime: "08:00", status: "taken", recordedAt: "08:02" },
+    { id: "demo-4", routineId: "metformina", memberId: "joao", date: dateDaysAgo(2, referenceDate), scheduledTime: "13:00", status: "skipped", recordedAt: "15:20" },
   ];
   const documents: HealthDocument[] = [
-    { id: "document-demo-1", title: "Receita Uso Contínuo - Losartana", memberId: "joao", category: "prescription", date: dateDaysAgo(13), fileName: "receita-losartana.txt", mimeType: "text/plain" },
-    { id: "document-demo-2", title: "Hemograma Completo", memberId: "maria", category: "exam", date: dateDaysAgo(30), fileName: "hemograma-completo.txt", mimeType: "text/plain" },
-    { id: "document-demo-3", title: "Atestado Médico - 5 dias", memberId: "ana", category: "certificate", date: dateDaysAgo(45), fileName: "atestado-medico.txt", mimeType: "text/plain" },
+    { id: "document-demo-1", title: "Receita Uso Contínuo - Losartana", memberId: "joao", category: "prescription", date: dateDaysAgo(13, referenceDate), fileName: "receita-losartana.txt", mimeType: "text/plain" },
+    { id: "document-demo-2", title: "Hemograma Completo", memberId: "maria", category: "exam", date: dateDaysAgo(30, referenceDate), fileName: "hemograma-completo.txt", mimeType: "text/plain" },
+    { id: "document-demo-3", title: "Atestado Médico - 5 dias", memberId: "ana", category: "certificate", date: dateDaysAgo(45, referenceDate), fileName: "atestado-medico.txt", mimeType: "text/plain" },
   ];
   return { members, drugs, presentations, routines, logs, documents };
 }
@@ -354,6 +374,11 @@ function formatDocumentDate(dateKey: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(year, month - 1, day));
 }
 
+function scannedDocumentFileName(title: string) {
+  const safeTitle = title.trim().replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, " ").replace(/[. ]+$/g, "");
+  return `${safeTitle || "documento-digitalizado"}.pdf`;
+}
+
 function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -389,7 +414,7 @@ export default function Home() {
   const [modal, setModal] = useState<Modal>(null);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [memberPhoto, setMemberPhoto] = useState("");
-  const [state, setState] = useState<AppState>(() => createDemoState());
+  const [state, setState] = useState<AppState>(() => createDemoState(new Date(2024, 0, 15, 12)));
   const [selectedMemberId, setSelectedMemberId] = useState("joao");
   const [medicineMemberId, setMedicineMemberId] = useState("joao");
   const [routineDrugId, setRoutineDrugId] = useState("drug-pantoprazol");
@@ -401,12 +426,16 @@ export default function Home() {
   const [documentFilter, setDocumentFilter] = useState<"all" | DocumentCategory>("all");
   const [documentMemberFilter, setDocumentMemberFilter] = useState("all");
   const [documentSearch, setDocumentSearch] = useState("");
+  const [documentTitle, setDocumentTitle] = useState("");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [nativeDocumentScan, setNativeDocumentScan] = useState<NativeDocumentScan | null>(null);
+  const [documentPreparing, setDocumentPreparing] = useState(false);
   const documentSearchRef = useRef<HTMLInputElement>(null);
   const [hydrated, setHydrated] = useState(false);
-  const [clockMinutes, setClockMinutes] = useState(() => new Date().getHours() * 60 + new Date().getMinutes());
+  const [clockMinutes, setClockMinutes] = useState(12 * 60);
+  const [today, setToday] = useState("2024-01-15");
   const [toast, setToast] = useState("");
-  const today = localDateKey();
 
   useEffect(() => {
     let savedState: AppState | undefined;
@@ -417,18 +446,20 @@ export default function Home() {
       // Mantém os dados de demonstração caso o armazenamento local esteja indisponível.
     }
     const hydrationTimer = window.setTimeout(() => {
-      const parsed = savedState;
-      if (parsed) {
-        setState(parsed);
-        if (parsed.members.length) {
-          setSelectedMemberId((current) => parsed.members.some((member) => member.id === current) ? current : parsed.members[0].id);
-        }
+      const now = new Date();
+      const parsed = savedState ?? createDemoState(now);
+      setState(parsed);
+      setToday(localDateKey(now));
+      setClockMinutes(now.getHours() * 60 + now.getMinutes());
+      if (parsed.members.length) {
+        setSelectedMemberId((current) => parsed.members.some((member) => member.id === current) ? current : parsed.members[0].id);
       }
       setHydrated(true);
     }, 0);
     const clockTimer = window.setInterval(() => {
       const now = new Date();
       setClockMinutes(now.getHours() * 60 + now.getMinutes());
+      setToday(localDateKey(now));
     }, 60_000);
     return () => {
       window.clearTimeout(hydrationTimer);
@@ -450,6 +481,23 @@ export default function Home() {
     const timer = window.setTimeout(() => setToast(""), 2600);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    window.CuraFamiliaReceiveScan = (_fileName, mimeType, documentId, fileSize) => {
+      setDocumentFile(null);
+      setNativeDocumentScan({ fileName: _fileName, mimeType, documentId, fileSize });
+      setDocumentPreparing(false);
+      setToast("Lote digitalizado e pronto para salvar");
+    };
+    window.CuraFamiliaScanCancelled = (message) => {
+      setDocumentPreparing(false);
+      if (message) setToast(message);
+    };
+    return () => {
+      delete window.CuraFamiliaReceiveScan;
+      delete window.CuraFamiliaScanCancelled;
+    };
+  }, []);
 
   const doses = useMemo<TodayDose[]>(() => state.routines.filter((routine) => routine.active !== false).flatMap((routine) =>
     routine.times.map((time) => {
@@ -484,7 +532,8 @@ export default function Home() {
   ];
 
   const greeting = clockMinutes < 12 * 60 ? "Bom dia" : clockMinutes < 18 * 60 ? "Boa tarde" : "Boa noite";
-  const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", weekday: "long" }).format(new Date());
+  const [todayYear, todayMonth, todayDay] = today.split("-").map(Number);
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", weekday: "long" }).format(new Date(todayYear, todayMonth - 1, todayDay, 12));
   const memberById = (id: string) => state.members.find((member) => member.id === id);
   const drugById = (id: string) => state.drugs.find((drug) => drug.id === id);
   const presentationById = (id: string) => state.presentations.find((presentation) => presentation.id === id);
@@ -506,6 +555,8 @@ export default function Home() {
   const historyResultEnd = Math.min(historyPageStart + HISTORY_PAGE_SIZE, filteredHistoryLogs.length);
   const selectedDocumentMember = documentMemberFilter === "all" ? undefined : memberById(documentMemberFilter);
   const selectedHealthDocument = selectedDocumentId ? state.documents.find((document) => document.id === selectedDocumentId) : undefined;
+  const selectedDocumentSource = selectedHealthDocument?.dataUrl
+    ?? (selectedHealthDocument?.nativeDocumentId ? `/native-documents/${encodeURIComponent(selectedHealthDocument.nativeDocumentId)}` : undefined);
   const normalizedDocumentSearch = documentSearch.trim().toLocaleLowerCase("pt-BR");
   const visibleDocuments = [...state.documents]
     .filter((document) => documentMemberFilter === "all" || document.memberId === documentMemberFilter)
@@ -591,6 +642,10 @@ export default function Home() {
     setEditingMemberId(null);
     setMemberPhoto("");
     setSelectedDocumentId(null);
+    setDocumentTitle("");
+    setDocumentFile(null);
+    setNativeDocumentScan(null);
+    setDocumentPreparing(false);
   }
 
   async function handleMemberPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -708,6 +763,40 @@ export default function Home() {
     setToast(isNowActive ? "Regra de uso ativada" : "Regra de uso pausada");
   }
 
+  async function handleDocumentFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp", "text/plain"];
+    if (!allowedTypes.includes(file.type)) {
+      setToast("Escolha um arquivo PDF, JPG, PNG, WEBP ou TXT");
+      return;
+    }
+    if (file.size > 1_000_000) {
+      setToast("Escolha um arquivo com até 1 MB para salvar neste dispositivo");
+      return;
+    }
+
+    setDocumentFile(file);
+    setNativeDocumentScan(null);
+    setToast("Arquivo selecionado");
+  }
+
+  function startDocumentScanner() {
+    if (!window.CuraFamiliaAndroid?.scanDocument) {
+      setToast("A digitalização com detecção de bordas está disponível no app Android");
+      return;
+    }
+    try {
+      setDocumentPreparing(true);
+      window.CuraFamiliaAndroid.scanDocument();
+    } catch {
+      setDocumentPreparing(false);
+      setToast("Não foi possível abrir o digitalizador");
+    }
+  }
+
   async function addDocument(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -715,15 +804,29 @@ export default function Home() {
     const memberId = String(data.get("memberId") || "");
     const category = String(data.get("category") || "prescription") as DocumentCategory;
     const date = String(data.get("date") || today);
-    const file = data.get("file");
-    if (!title || !memberId || !(file instanceof File) || !file.size) return;
-    if (file.size > 1_000_000) {
+    const file = documentFile;
+    if (!title || !memberId || (!file?.size && !nativeDocumentScan)) {
+      setToast("Escolha um arquivo ou escaneie o documento");
+      return;
+    }
+    if (file && file.size > 1_000_000) {
       setToast("Escolha um arquivo com até 1 MB para salvar neste dispositivo");
       return;
     }
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      const newDocument: HealthDocument = { id: `document-${Date.now()}`, title, memberId, category, date, fileName: file.name, mimeType: file.type || "application/octet-stream", dataUrl };
+      const dataUrl = file ? await readFileAsDataUrl(file) : undefined;
+      const newDocument: HealthDocument = {
+        id: `document-${Date.now()}`,
+        title,
+        memberId,
+        category,
+        date,
+        fileName: nativeDocumentScan ? scannedDocumentFileName(title) : file?.name ?? "documento.pdf",
+        mimeType: nativeDocumentScan?.mimeType ?? file?.type ?? "application/octet-stream",
+        dataUrl,
+        nativeDocumentId: nativeDocumentScan?.documentId,
+        fileSize: nativeDocumentScan?.fileSize ?? file?.size,
+      };
       setState((current) => ({ ...current, documents: [newDocument, ...current.documents] }));
       closeModal();
       setToast("Documento anexado com sucesso");
@@ -733,6 +836,15 @@ export default function Home() {
   }
 
   function downloadHealthDocument(healthDocument: HealthDocument) {
+    if (healthDocument.nativeDocumentId) {
+      if (window.CuraFamiliaAndroid?.saveStoredDocument) {
+        window.CuraFamiliaAndroid.saveStoredDocument(healthDocument.nativeDocumentId, healthDocument.fileName, healthDocument.mimeType);
+        setToast("Escolha onde salvar o documento");
+      } else {
+        setToast("Este documento está disponível no app Android");
+      }
+      return;
+    }
     const member = memberById(healthDocument.memberId);
     const generatedFile = !healthDocument.dataUrl;
     const generatedText = `CuraFamília\n\n${healthDocument.title}\nFamiliar: ${member?.name ?? "Não informado"}\nData: ${formatDocumentDate(healthDocument.date)}\n\nDocumento de demonstração.`;
@@ -1093,13 +1205,29 @@ export default function Home() {
           <header><h2 id="document-modal-title"><Icon filled>upload_file</Icon>Anexar Documento</h2><button type="button" onClick={closeModal} aria-label="Fechar"><Icon>close</Icon></button></header>
           <form onSubmit={addDocument}>
             <div className="medication-modal-body document-modal-body">
-              <label className="wide">Título do Documento<input name="title" placeholder="Ex.: Receita de uso contínuo" required autoFocus /></label>
+              <label className="wide">Título do Documento<input name="title" value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder="Ex.: Receita de uso contínuo" required autoFocus /></label>
               <label>Tipo<select name="category" defaultValue="prescription" required><option value="prescription">Receita</option><option value="exam">Exame</option><option value="certificate">Atestado</option></select></label>
               <label>Familiar<select name="memberId" defaultValue={selectedDocumentMember?.id ?? selectedMember?.id} required>{state.members.map((member) => <option key={member.id} value={member.id}>{member.name} ({member.relationship})</option>)}</select></label>
               <label className="wide">Data do Documento<input name="date" type="date" defaultValue={today} required /></label>
-              <label className="wide document-file-field"><span>Arquivo</span><input name="file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,text/plain" required /><small>PDF, JPG, PNG, WEBP ou TXT — até 1 MB. O arquivo será salvo somente neste dispositivo.</small></label>
+              <div className="wide document-file-field">
+                <span>Documento</span>
+                <div className="document-source-actions">
+                  <label className="document-source-button">
+                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,text/plain" disabled={documentPreparing} onChange={(event) => void handleDocumentFile(event)} />
+                    <Icon>attach_file</Icon>
+                    <span>Escolher arquivo</span>
+                  </label>
+                  <button className="document-source-button scan" type="button" disabled={documentPreparing} onClick={startDocumentScanner}>
+                    <Icon>document_scanner</Icon>
+                    <span>{documentPreparing ? "Digitalizando..." : "Digitalizar documento"}</span>
+                  </button>
+                </div>
+                {documentFile && <div className="document-selected-file"><Icon>draft</Icon><div><strong>{documentFile.name}</strong><small>Arquivo selecionado · {Math.max(1, Math.round(documentFile.size / 1024))} KB</small></div><button type="button" aria-label="Remover documento selecionado" onClick={() => setDocumentFile(null)}><Icon>close</Icon></button></div>}
+                {nativeDocumentScan && <div className="document-selected-file"><Icon>picture_as_pdf</Icon><div><strong>{scannedDocumentFileName(documentTitle)}</strong><small>Lote digitalizado · {Math.max(1, Math.round(nativeDocumentScan.fileSize / 1024))} KB</small></div><button type="button" aria-label="Remover lote digitalizado" onClick={() => setNativeDocumentScan(null)}><Icon>close</Icon></button></div>}
+                <small>Escolha um arquivo de até 1 MB ou digitalize quantas páginas precisar. O scanner detecta as bordas, corrige a perspectiva e reúne todo o lote em um único PDF.</small>
+              </div>
             </div>
-            <footer><button type="button" onClick={closeModal}>Cancelar</button><button type="submit">Salvar Documento</button></footer>
+            <footer><button type="button" onClick={closeModal}>Cancelar</button><button type="submit" disabled={documentPreparing}>Salvar Documento</button></footer>
           </form>
         </section>
       </div>}
@@ -1115,12 +1243,12 @@ export default function Home() {
             <button type="button" onClick={closeModal} aria-label="Fechar visualização"><Icon>close</Icon></button>
           </header>
           <div className="document-viewer-body">
-            {selectedHealthDocument.dataUrl ? (
+            {selectedDocumentSource ? (
               selectedHealthDocument.mimeType === "application/pdf"
-                ? <PdfDocumentViewer dataUrl={selectedHealthDocument.dataUrl} title={selectedHealthDocument.title} />
+                ? <PdfDocumentViewer sourceUrl={selectedDocumentSource} title={selectedHealthDocument.title} />
                 : selectedHealthDocument.mimeType.startsWith("image/")
-                  ? <img src={selectedHealthDocument.dataUrl} alt={selectedHealthDocument.title} />
-                  : <iframe src={selectedHealthDocument.dataUrl} title={`Visualização de ${selectedHealthDocument.title}`} />
+                  ? <img src={selectedDocumentSource} alt={selectedHealthDocument.title} />
+                  : <iframe src={selectedDocumentSource} title={`Visualização de ${selectedHealthDocument.title}`} />
             ) : <div className="document-demo-preview">
               <span><Icon filled>{DOCUMENT_CATEGORY_DETAILS[selectedHealthDocument.category].icon}</Icon></span>
               <small>Documento de demonstração</small>
