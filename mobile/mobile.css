@@ -1,0 +1,7 @@
+html, body, #root { min-height: 100%; }
+body { overscroll-behavior-y: none; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+
+@supports (padding: env(safe-area-inset-top)) {
+  .mobile-topbar { padding-top: max(12px, env(safe-area-inset-top)); }
+}

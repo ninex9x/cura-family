@@ -8,7 +8,6 @@ async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
-
   return worker.fetch(
     new Request("http://localhost/", { headers: { accept: "text/html" } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
@@ -16,34 +15,101 @@ async function render() {
   );
 }
 
-test("server-renders the Cuidar medication organizer", async () => {
+test("server-renders the CuraFamilia Today experience", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
   assert.match(html, /<html lang="pt-BR">/i);
-  assert.match(html, /<title>Cuidar — Medicamentos da família<\/title>/i);
-  assert.match(html, /CUIDADO EM FAMÍLIA/);
-  assert.match(html, /Rotina de hoje/);
-  assert.match(html, /Sua família/);
+  assert.match(html, /CuraFamília — Gestão de Saúde/i);
+  assert.match(html, /Familiares acompanhados/);
+  assert.match(html, /Progresso Diário/);
+  assert.match(html, /Agenda de Hoje/);
+  assert.match(html, /Este aplicativo não substitui orientação médica/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
 
-test("removes the disposable starter and keeps mobile behavior", async () => {
-  const [page, layout, css, packageJson] = await Promise.all([
+test("keeps medication actions and responsive navigation", async () => {
+  const [page, layout, css, packageJson, androidActivity] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../android/app/src/main/java/br/com/curafamilia/app/MainActivity.java", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /localStorage/);
   assert.match(page, /recordDose/);
-  assert.match(page, /Adicionar familiar/);
+  assert.match(page, /Adicionar Familiar/i);
+  assert.match(page, /Não foi tomada/);
+  assert.match(page, /family-bento-grid/);
+  assert.match(page, /handleMemberPhoto/);
+  assert.match(page, /optimizeMemberPhoto/);
+  assert.match(page, /MemberAvatar/);
+  assert.match(page, /accept="image\/\*"/);
+  assert.match(page, /Ver Histórico/);
+  assert.match(page, /Ver Documentos/);
+  assert.match(page, /openDocuments/);
+  assert.match(page, /documentMemberFilter/);
+  assert.match(page, /documentSearch/);
+  assert.match(page, /focusDocumentSearch/);
+  assert.match(page, /toggleMedicineActive/);
+  assert.match(page, /openMedicineModal/);
+  assert.match(page, /foi vinculado a/);
+  assert.match(page, /Criar Regra de Uso/);
+  assert.match(page, /MedicationPresentation/);
+  assert.match(page, /migrateStoredState/);
+  assert.match(page, /catalog-presentations/);
+  assert.match(page, /Nova apresentação/);
+  assert.match(page, /family-medicine-button/);
+  assert.match(page, /medication-bento-grid/);
+  assert.match(page, /Cadastrar Medicamento/);
+  assert.match(page, /Histórico de Registros/);
+  assert.match(page, /historySearch/);
+  assert.match(page, /history-filter-card/);
+  assert.match(page, /history-table/);
+  assert.match(page, /history-pagination/);
+  assert.match(page, /Meus Documentos/);
+  assert.match(page, /addDocument/);
+  assert.match(page, /downloadHealthDocument/);
+  assert.match(page, /document-card-actions/);
+  assert.match(page, /CuraFamiliaAndroid/);
+  assert.match(page, /openHealthDocument/);
+  assert.match(page, /document-viewer-modal/);
+  assert.match(page, /PdfDocumentViewer/);
+  assert.match(page, /document-filter-tabs/);
+  assert.match(page, /document-grid/);
+  assert.match(page, /Salvar Documento/);
+  assert.doesNotMatch(page, /Adicionar Dose/);
   assert.match(layout, /lang="pt-BR"/);
-  assert.match(css, /\.mobile-nav/);
-  assert.match(css, /@media \(max-width: 760px\)/);
+  assert.match(css, /\.mobile-bottom-nav/);
+  assert.match(css, /\.member-panel/);
+  assert.match(css, /\.family-add-card/);
+  assert.match(css, /\.family-documents-button/);
+  assert.match(css, /\.medicine-switch/);
+  assert.match(css, /\.medicine-link-note/);
+  assert.match(css, /\.catalog-routine-row/);
+  assert.match(css, /\.catalog-card-actions/);
+  assert.match(css, /\.medication-modal/);
+  assert.match(css, /\.history-family-filter/);
+  assert.match(css, /\.history-status/);
+  assert.match(css, /\.documents-page/);
+  assert.match(css, /\.document-member-filter/);
+  assert.match(css, /\.document-search/);
+  assert.match(css, /\.document-card/);
+  assert.match(css, /\.document-card-actions/);
+  assert.match(css, /\.document-file-field/);
+  assert.match(css, /\.document-viewer-modal/);
+  assert.match(css, /\.document-demo-preview/);
+  assert.match(css, /\.pdf-document-pages/);
+  assert.match(css, /grid-template-columns: repeat\(5,1fr\)/);
+  assert.match(css, /@media \(max-width: 767px\)/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
+  assert.match(androidActivity, /https:\/\/" \+ APP_HOST/);
+  assert.match(androidActivity, /shouldInterceptRequest/);
+  assert.match(androidActivity, /DownloadBridge/);
+  assert.match(androidActivity, /ACTION_CREATE_DOCUMENT/);
+  assert.doesNotMatch(androidActivity, /file:\/\/\/android_asset/);
   await assert.rejects(access(new URL("../app/_sites-preview", root)));
 });

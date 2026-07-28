@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cura_primary">#A43C12</color>
+    <color name="cura_primary_container">#FF7F50</color>
+    <color name="cura_background">#FAF9F7</color>
+</resources>
