@@ -1,98 +1,75 @@
-# vinext-starter
+# CuraFamília
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Aplicação local para organizar familiares, medicamentos, horários, registros de doses e documentos de saúde. O mesmo componente React atende à experiência web e ao aplicativo Android empacotado em uma `WebView`.
 
-## Prerequisites
+> Este projeto é exclusivamente local. Não publique nem implante a aplicação em um provedor de hospedagem: o backend não possui autenticação multiusuário e manipula dados sensíveis de saúde.
 
-- Node.js `>=22.13.0`
+## Requisitos
 
-## Quick Start
+- Node.js `>=22.13.0` (Node 24 LTS recomendado)
+- Java/Android SDK compatíveis com Android 34, apenas para gerar o APK
+
+## Desenvolvimento local
 
 ```bash
 npm install
 npm run dev
-npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+O servidor local oferece a interface e a API no mesmo endereço. O binding D1 `DB` é simulado localmente pelo plugin do Cloudflare e a tabela necessária é criada de forma idempotente pela aplicação. Na primeira execução, `scripts/dev.mjs` cria uma chave aleatória em `.dev.vars`, limita o arquivo ao usuário atual e não mostra a chave no terminal.
 
-## Included Shape
+Comandos úteis:
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+- `npm run dev`: inicia a aplicação web local;
+- `npm start`: atalho para o mesmo servidor local, sempre restrito a `127.0.0.1`;
+- `npm run build`: valida o build web;
+- `npm test`: executa o build e os testes;
+- `npm run build:mobile`: gera os arquivos estáticos usados pelo Android;
+- `npm run android:apk`: gera o APK de depuração no Windows.
 
-## Workspace Auth Headers
+## Arquitetura
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+- `app/page.tsx`: interface principal, regras de interação e sincronização;
+- `app/api/state/route.ts`: API local `GET`/`PUT` para persistência;
+- `lib/health-state.ts`: contrato compartilhado e validação dos dados;
+- `db/`: schema Drizzle e acesso ao D1;
+- `worker/`: entrada Vinext/Cloudflare usada pelo servidor local;
+- `mobile/`: entrada Vite que reutiliza a tela principal;
+- `android/`: shell nativo, scanner de documentos e ponte JavaScript;
+- `tests/`: testes do HTML renderizado e do contrato de dados.
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+## Backend local
 
-Treat the full name as optional and fall back to email when it is absent:
+### `GET /api/state`
 
-```tsx
-import { headers } from "next/headers";
+Retorna o snapshot familiar atual, sua revisão e a data da última alteração. Quando o banco ainda está vazio, retorna `state: null` e `revision: 0`.
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+### `PUT /api/state`
 
-  const displayName = fullName ?? email;
-  // ...
+Recebe:
+
+```json
+{
+  "state": {
+    "members": [],
+    "drugs": [],
+    "presentations": [],
+    "routines": [],
+    "logs": [],
+    "documents": []
+  },
+  "expectedRevision": 0
 }
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+A API valida tipos, tamanhos, formatos e relacionamentos antes de persistir. Atualizações concorrentes retornam `409` com a revisão atual. As respostas usam `Cache-Control: no-store`, requisições de escrita precisam ser de mesma origem e hosts que não sejam locais recebem `403`.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+Antes de entrar no D1, o snapshot completo é criptografado com AES-256-GCM usando `LOCAL_DATA_ENCRYPTION_KEY`. O frontend não grava novos dados sensíveis no `localStorage`: ele apenas lê uma instalação antiga uma vez e remove essa cópia depois que a migração segura é confirmada. Sem backend, a versão web mantém alterações somente durante a sessão.
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+No APK, o app continua totalmente offline. Estado, fotos incorporadas e PDFs digitalizados são criptografados por uma chave AES não exportável do Android Keystore. Documentos legados em texto puro são migrados em segundo plano, o backup do aplicativo está desabilitado e a WebView bloqueia navegação e recursos fora da origem permitida.
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
+## Privacidade
 
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
+O estado contém nomes, fotos, observações médicas, medicamentos, histórico de doses e documentos. Use apenas em dispositivo confiável e não inclua bancos, `.dev.vars`, arquivos de ambiente, chaves de assinatura ou documentos reais no Git.
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+Guarde uma cópia protegida de `.dev.vars`: perder ou trocar `LOCAL_DATA_ENCRYPTION_KEY` torna o banco local existente ilegível. A chave do Android é gerenciada pelo próprio sistema e os dados deixam de ser recuperáveis se ela for invalidada ou se o aplicativo for removido.

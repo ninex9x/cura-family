@@ -1,89 +1,36 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  validateAppState,
+  type AppState,
+  type DocumentCategory,
+  type DoseLog,
+  type DoseStatus,
+  type Drug,
+  type HealthDocument,
+  type MedicationPresentation,
+  type MedicationRoutine,
+  type Member,
+} from "../lib/health-state";
 
 type View = "today" | "family" | "medicines" | "history" | "documents";
 type Modal = "member" | "drug" | "presentation" | "routine" | "document" | "document-viewer" | null;
-type DoseStatus = "taken" | "skipped";
-type DocumentCategory = "prescription" | "exam" | "certificate";
-
 declare global {
   interface Window {
     CuraFamiliaAndroid?: {
       saveDocument: (fileName: string, mimeType: string, dataUrl: string) => void;
       saveStoredDocument?: (documentId: string, fileName: string, mimeType: string) => void;
       scanDocument?: () => void;
+      loadState?: () => void;
+      saveState?: (json: string) => boolean;
     };
+    CuraFamiliaReceiveState?: (json: string | null) => void;
+    CuraFamiliaStateError?: (message: string) => void;
     CuraFamiliaReceiveScan?: (fileName: string, mimeType: string, documentId: string, fileSize: number) => void;
     CuraFamiliaScanCancelled?: (message: string) => void;
   }
 }
-
-type Member = {
-  id: string;
-  name: string;
-  relationship: string;
-  initials: string;
-  color: string;
-  photo?: string;
-  medicalNotes?: string;
-};
-
-type Drug = {
-  id: string;
-  name: string;
-  color: string;
-};
-
-type MedicationPresentation = {
-  id: string;
-  drugId: string;
-  strength: string;
-  form: string;
-};
-
-type MedicationRoutine = {
-  id: string;
-  drugId: string;
-  presentationId: string;
-  memberId: string;
-  quantity: string;
-  times: string[];
-  instruction: string;
-  active?: boolean;
-};
-
-type DoseLog = {
-  id: string;
-  routineId: string;
-  memberId: string;
-  date: string;
-  scheduledTime: string;
-  status: DoseStatus;
-  recordedAt: string;
-};
-
-type HealthDocument = {
-  id: string;
-  title: string;
-  memberId: string;
-  category: DocumentCategory;
-  date: string;
-  fileName: string;
-  mimeType: string;
-  dataUrl?: string;
-  nativeDocumentId?: string;
-  fileSize?: number;
-};
-
-type AppState = {
-  members: Member[];
-  drugs: Drug[];
-  presentations: MedicationPresentation[];
-  routines: MedicationRoutine[];
-  logs: DoseLog[];
-  documents: HealthDocument[];
-};
 
 type TodayDose = {
   routine: MedicationRoutine;
@@ -198,6 +145,8 @@ type PersistedState = {
 };
 
 const STORAGE_KEY = "cuidar-med-family-v1";
+const STATE_API_PATH = "/api/state";
+const BACKEND_SAVE_DELAY_MS = 600;
 const HISTORY_PAGE_SIZE = 5;
 const DOCUMENT_CATEGORIES: { id: "all" | DocumentCategory; label: string }[] = [
   { id: "all", label: "Todos" },
@@ -304,15 +253,18 @@ function migrateStoredState(raw: unknown): AppState {
   const parsed = raw as PersistedState;
   const members = Array.isArray(parsed.members) ? parsed.members : defaults.members;
   const documents = Array.isArray(parsed.documents) ? parsed.documents : defaults.documents;
-  const migrateLogs = (logs: LegacyDoseLog[] | undefined) => (logs ?? defaults.logs).map((log) => ({
-    id: log.id,
-    routineId: log.routineId ?? log.medicineId ?? "",
-    memberId: log.memberId,
-    date: log.date,
-    scheduledTime: log.scheduledTime,
-    status: log.status,
-    recordedAt: log.recordedAt,
-  })).filter((log) => Boolean(log.routineId));
+  const migrateLogs = (logs: LegacyDoseLog[] | undefined) => {
+    const sourceLogs: LegacyDoseLog[] = logs ?? defaults.logs;
+    return sourceLogs.map((log) => ({
+      id: log.id,
+      routineId: log.routineId ?? log.medicineId ?? "",
+      memberId: log.memberId,
+      date: log.date,
+      scheduledTime: log.scheduledTime,
+      status: log.status,
+      recordedAt: log.recordedAt,
+    })).filter((log) => Boolean(log.routineId));
+  };
 
   if (Array.isArray(parsed.drugs) && Array.isArray(parsed.presentations) && Array.isArray(parsed.routines)) {
     return { members, drugs: parsed.drugs, presentations: parsed.presentations, routines: parsed.routines, logs: migrateLogs(parsed.logs), documents };
@@ -350,6 +302,48 @@ function migrateStoredState(raw: unknown): AppState {
   });
 
   return { members, drugs, presentations, routines, logs: migrateLogs(parsed.logs), documents };
+}
+
+function parseStoredState(raw: unknown) {
+  try {
+    const migrated = migrateStoredState(raw);
+    const validation = validateAppState(migrated);
+    return validation.success ? validation.state : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+type NativeStateResult =
+  | { available: false }
+  | { available: true; state?: string | null; error?: string };
+
+function readNativeState(): Promise<NativeStateResult> {
+  const bridge = window.CuraFamiliaAndroid;
+  if (!bridge?.loadState || !bridge.saveState) return Promise.resolve({ available: false });
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result: NativeStateResult) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      if (window.CuraFamiliaReceiveState === receiveState) delete window.CuraFamiliaReceiveState;
+      if (window.CuraFamiliaStateError === receiveError) delete window.CuraFamiliaStateError;
+      resolve(result);
+    };
+    const receiveState = (json: string | null) => finish({ available: true, state: json });
+    const receiveError = (message: string) => finish({ available: true, error: message });
+
+    window.CuraFamiliaReceiveState = receiveState;
+    window.CuraFamiliaStateError = receiveError;
+    const timer = window.setTimeout(() => finish({ available: true, error: "Tempo esgotado ao abrir o armazenamento seguro" }), 3_000);
+    try {
+      bridge.loadState!();
+    } catch {
+      finish({ available: true, error: "Não foi possível abrir o armazenamento seguro" });
+    }
+  });
 }
 
 function minutesFromTime(time: string) {
@@ -436,18 +430,78 @@ export default function Home() {
   const [clockMinutes, setClockMinutes] = useState(12 * 60);
   const [today, setToday] = useState("2024-01-15");
   const [toast, setToast] = useState("");
+  const backendAvailableRef = useRef(false);
+  const backendRevisionRef = useRef(0);
+  const nativeStorageReadyRef = useRef(false);
 
   useEffect(() => {
-    let savedState: AppState | undefined;
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) savedState = migrateStoredState(JSON.parse(saved));
-    } catch {
-      // Mantém os dados de demonstração caso o armazenamento local esteja indisponível.
-    }
-    const hydrationTimer = window.setTimeout(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
+    async function hydrateState() {
+      let savedState: AppState | undefined;
+      try {
+        const saved = window.localStorage.getItem(STORAGE_KEY);
+        if (saved) savedState = parseStoredState(JSON.parse(saved));
+      } catch {
+        // Dados antigos inválidos não impedem a abertura do aplicativo.
+      }
+
+      let parsed = savedState ?? createDemoState();
+      const native = await readNativeState();
+      if (cancelled) return;
+      if (native.available) {
+        if (native.error) {
+          nativeStorageReadyRef.current = false;
+          if (!cancelled) setToast(native.error);
+        } else {
+          nativeStorageReadyRef.current = true;
+          if (native.state) {
+            let secureState: AppState | undefined;
+            try {
+              secureState = parseStoredState(JSON.parse(native.state));
+            } catch {
+              nativeStorageReadyRef.current = false;
+              if (!cancelled) setToast("Os dados seguros do aplicativo estão corrompidos");
+            }
+            if (secureState) {
+              parsed = secureState;
+              window.localStorage.removeItem(STORAGE_KEY);
+            } else {
+              nativeStorageReadyRef.current = false;
+              if (!cancelled) setToast("Os dados seguros do aplicativo estão corrompidos");
+            }
+          }
+        }
+      } else {
+        try {
+          const response = await fetch(STATE_API_PATH, { cache: "no-store", signal: controller.signal });
+          if (response.ok) {
+            const backend = await response.json() as { state?: unknown; revision?: unknown };
+            const backendState = backend.state ? parseStoredState(backend.state) : undefined;
+            if (backendState) {
+              parsed = backendState;
+              window.localStorage.removeItem(STORAGE_KEY);
+              backendRevisionRef.current = typeof backend.revision === "number" ? backend.revision : 0;
+              backendAvailableRef.current = true;
+            } else if (backend.state) {
+              if (!cancelled) setToast("O backend local contém dados inválidos e não será sobrescrito");
+            } else {
+              backendRevisionRef.current = typeof backend.revision === "number" ? backend.revision : 0;
+              backendAvailableRef.current = true;
+            }
+          } else {
+            throw new Error("Backend indisponível");
+          }
+        } catch {
+          if (!cancelled && !controller.signal.aborted) {
+            setToast("Backend indisponível; mudanças ficarão somente nesta sessão");
+          }
+        }
+      }
+
+      if (cancelled) return;
       const now = new Date();
-      const parsed = savedState ?? createDemoState(now);
       setState(parsed);
       setToday(localDateKey(now));
       setClockMinutes(now.getHours() * 60 + now.getMinutes());
@@ -455,25 +509,72 @@ export default function Home() {
         setSelectedMemberId((current) => parsed.members.some((member) => member.id === current) ? current : parsed.members[0].id);
       }
       setHydrated(true);
-    }, 0);
+    }
+
+    void hydrateState();
     const clockTimer = window.setInterval(() => {
       const now = new Date();
       setClockMinutes(now.getHours() * 60 + now.getMinutes());
       setToday(localDateKey(now));
     }, 60_000);
     return () => {
-      window.clearTimeout(hydrationTimer);
+      cancelled = true;
+      controller.abort();
       window.clearInterval(clockTimer);
     };
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // Mantém a sessão funcionando mesmo quando o navegador não permite mais armazenamento local.
+
+    const nativeBridge = window.CuraFamiliaAndroid;
+    if (nativeBridge?.saveState) {
+      if (!nativeStorageReadyRef.current) return;
+      try {
+        if (nativeBridge.saveState(JSON.stringify(state))) {
+          window.localStorage.removeItem(STORAGE_KEY);
+        } else {
+          console.warn("O armazenamento seguro do Android recusou a gravação");
+          window.setTimeout(() => setToast("Não foi possível salvar no armazenamento seguro"), 0);
+        }
+      } catch (error) {
+        console.warn("Não foi possível gravar no armazenamento seguro do Android", error);
+        window.setTimeout(() => setToast("Não foi possível salvar no armazenamento seguro"), 0);
+      }
+      return;
     }
+
+    if (!backendAvailableRef.current) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(STATE_API_PATH, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state, expectedRevision: backendRevisionRef.current }),
+          signal: controller.signal,
+        });
+        const result = await response.json() as { revision?: unknown };
+        if (response.status === 409) {
+          backendAvailableRef.current = false;
+          setToast("Dados alterados em outra sessão; recarregue antes de salvar");
+          return;
+        }
+        if (!response.ok) throw new Error("Backend indisponível");
+        if (typeof result.revision === "number") backendRevisionRef.current = result.revision;
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.warn("Persistência no backend local indisponível; dados mantidos apenas nesta sessão", error);
+        backendAvailableRef.current = false;
+        setToast("Falha ao salvar; dados mantidos apenas nesta sessão");
+      }
+    }, BACKEND_SAVE_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, [state, hydrated]);
 
   useEffect(() => {
@@ -901,8 +1002,8 @@ export default function Home() {
 
             <section className="family-selector-section">
               <h2>Familiares acompanhados</h2>
-              <div className="family-selector" role="list" aria-label="Selecionar familiar">
-                {state.members.map((member) => <button role="listitem" key={member.id} className={`family-option ${selectedMember?.id === member.id ? "selected" : ""}`} onClick={() => setSelectedMemberId(member.id)} aria-pressed={selectedMember?.id === member.id}>
+              <div className="family-selector" role="group" aria-label="Selecionar familiar">
+                {state.members.map((member) => <button key={member.id} className={`family-option ${selectedMember?.id === member.id ? "selected" : ""}`} onClick={() => setSelectedMemberId(member.id)} aria-pressed={selectedMember?.id === member.id}>
                   <span className="family-avatar-ring"><MemberAvatar member={member} avatarClassName="avatar avatar-family" photoClassName="avatar-family family-selector-photo" /></span>
                   <span>{member.name}</span>
                 </button>)}

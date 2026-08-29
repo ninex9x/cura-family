@@ -1,0 +1,176 @@
+{
+  "android/app/build.gradle": {
+    "mtime": 1788019848.8586664,
+    "seen": 1788024782.828223,
+    "ast_hash": "202d50a5f5f97527e8d84bcfd632cead",
+    "semantic_hash": ""
+  },
+  "android/app/src/main/java/br/com/curafamilia/app/MainActivity.java": {
+    "mtime": 1788023181.7367668,
+    "seen": 1788024782.8282323,
+    "ast_hash": "d2cfa8bf6c7dc0df5aea4b811b120260",
+    "semantic_hash": ""
+  },
+  "android/build.gradle": {
+    "mtime": 1788019848.8600297,
+    "seen": 1788024782.828237,
+    "ast_hash": "70dced1f946cc47aa7f171d081599f3a",
+    "semantic_hash": ""
+  },
+  "android/gradlew": {
+    "mtime": 1788019848.8610268,
+    "seen": 1788024782.8282406,
+    "ast_hash": "0f777a49c656b3aba9ed0634916e8b4c",
+    "semantic_hash": ""
+  },
+  "android/settings.gradle": {
+    "mtime": 1788019848.8610268,
+    "seen": 1788024782.8282428,
+    "ast_hash": "fd631adde538a33d3b14ea190e77671a",
+    "semantic_hash": ""
+  },
+  "app/api/state/route.ts": {
+    "mtime": 1788021963.6058269,
+    "seen": 1788024782.8282447,
+    "ast_hash": "57a1d683f375e04ccbfa8a9b24d0f65d",
+    "semantic_hash": ""
+  },
+  "app/layout.tsx": {
+    "mtime": 1788023209.0625982,
+    "seen": 1788024782.8282466,
+    "ast_hash": "bbd2403e12abc30edc9b97e96bb2ea82",
+    "semantic_hash": ""
+  },
+  "app/page.tsx": {
+    "mtime": 1788024291.8964496,
+    "seen": 1788024782.8282483,
+    "ast_hash": "ebc982ba9b861cfb615cbb72a15c64e6",
+    "semantic_hash": ""
+  },
+  "db/index.ts": {
+    "mtime": 1788021963.604827,
+    "seen": 1788024782.8282504,
+    "ast_hash": "3c7e0cd647fe5be40c7c3354857c0d20",
+    "semantic_hash": ""
+  },
+  "db/schema.ts": {
+    "mtime": 1788020471.220727,
+    "seen": 1788024782.828252,
+    "ast_hash": "f9153cbb34ec63b58abf60c0f1028b1c",
+    "semantic_hash": ""
+  },
+  "eslint.config.mjs": {
+    "mtime": 1788019848.8639593,
+    "seen": 1788024782.8282542,
+    "ast_hash": "dfa1f5f6a7037bf39dc510f30b180002",
+    "semantic_hash": ""
+  },
+  "lib/health-state.ts": {
+    "mtime": 1788021238.6805286,
+    "seen": 1788024782.8282557,
+    "ast_hash": "b8297ebcc0ef893b8716f1b740041d3c",
+    "semantic_hash": ""
+  },
+  "mobile/main.tsx": {
+    "mtime": 1788023209.316606,
+    "seen": 1788024782.82826,
+    "ast_hash": "5b92c690b8d736faed6425d767444493",
+    "semantic_hash": ""
+  },
+  "next.config.ts": {
+    "mtime": 1788019848.864577,
+    "seen": 1788024782.8282619,
+    "ast_hash": "9b77af189a21a7a64e4bd7a426f64176",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1788024129.1066823,
+    "seen": 1788024782.828264,
+    "ast_hash": "2e5f92f517a849c7c9668aca823178fc",
+    "semantic_hash": ""
+  },
+  "postcss.config.mjs": {
+    "mtime": 1788019848.8670266,
+    "seen": 1788024782.8282692,
+    "ast_hash": "239f3ebf717465dc636818a1a619398d",
+    "semantic_hash": ""
+  },
+  "tests/health-state.test.mjs": {
+    "mtime": 1788020583.7980509,
+    "seen": 1788024782.8282738,
+    "ast_hash": "634e807049c758be13b0f30eed0dc4f6",
+    "semantic_hash": ""
+  },
+  "tests/rendered-html.test.mjs": {
+    "mtime": 1788023181.9557734,
+    "seen": 1788024782.8282754,
+    "ast_hash": "07f73136fd2398814f00c0ffcf7fffdf",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1788021152.7943528,
+    "seen": 1788024782.8282793,
+    "ast_hash": "10aeca1ee1fd0f303f632cfd82657e96",
+    "semantic_hash": ""
+  },
+  "vite.config.ts": {
+    "mtime": 1788020914.20803,
+    "seen": 1788024782.8282812,
+    "ast_hash": "00d9210271d0c5398a67dceb9c869575",
+    "semantic_hash": ""
+  },
+  "vite.mobile.config.ts": {
+    "mtime": 1788019848.8680265,
+    "seen": 1788024782.8282826,
+    "ast_hash": "fa01ffcc1ba54d7d85817986bfedab97",
+    "semantic_hash": ""
+  },
+  "worker/index.ts": {
+    "mtime": 1788019848.8690264,
+    "seen": 1788024782.8282843,
+    "ast_hash": "548cbbd26846af26d1b4b503b353f123",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1788019848.8580267,
+    "seen": 1788024782.8282857,
+    "ast_hash": "13adaa97f36699edff303e7c9d43ed02",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1788022935.1995072,
+    "seen": 1788024782.8282876,
+    "ast_hash": "329496d7d07d0691482b4aee43254e72",
+    "semantic_hash": ""
+  },
+  "mobile/index.html": {
+    "mtime": 1788023181.2937531,
+    "seen": 1788024782.8282933,
+    "ast_hash": "4d46de3d2171f8d169912de7dcd4a03c",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260829_163642_entender_a_estrutura__auditar_informa\u00e7\u00f5es_que_n\u00e3o.md": {
+    "mtime": 1788021402.3148654,
+    "seen": 1788024782.8282907,
+    "ast_hash": "a6ee0083f83cfecd956c9ea09d6be83a",
+    "semantic_hash": ""
+  },
+  "lib/server-vault.ts": {
+    "mtime": 1788023815.0200746,
+    "seen": 1788024782.8282578,
+    "ast_hash": "0dd94c2aeaff8582903166d5610ddab0",
+    "semantic_hash": ""
+  },
+  "scripts/dev.mjs": {
+    "mtime": 1788023808.8294673,
+    "seen": 1788024782.8282712,
+    "ast_hash": "f1b67fc4a298fd8f055c7b3677cb4703",
+    "semantic_hash": ""
+  },
+  "tests/server-vault.test.mjs": {
+    "mtime": 1788022910.251802,
+    "seen": 1788024782.8282776,
+    "ast_hash": "c3a60e0f1482d6f17bcbfecb9a710626",
+    "semantic_hash": ""
+  }
+}

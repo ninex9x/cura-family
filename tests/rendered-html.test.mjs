@@ -42,6 +42,9 @@ test("keeps medication actions and responsive navigation", async () => {
   ]);
 
   assert.match(page, /localStorage/);
+  assert.doesNotMatch(page, /localStorage\.setItem/);
+  assert.match(page, /saveState/);
+  assert.match(page, /readNativeState/);
   assert.match(page, /recordDose/);
   assert.match(page, /Adicionar Familiar/i);
   assert.match(page, /Não foi tomada/);
@@ -92,6 +95,7 @@ test("keeps medication actions and responsive navigation", async () => {
   assert.match(page, /handleDocumentFile/);
   assert.doesNotMatch(page, /Adicionar Dose/);
   assert.match(layout, /lang="pt-BR"/);
+  assert.doesNotMatch(layout, /fonts\.googleapis\.com|fonts\.gstatic\.com/);
   assert.match(css, /\.mobile-bottom-nav/);
   assert.match(css, /\.member-panel/);
   assert.match(css, /\.family-add-card/);
@@ -128,9 +132,17 @@ test("keeps medication actions and responsive navigation", async () => {
   assert.match(androidActivity, /scanned-documents/);
   assert.match(androidActivity, /serveNativeDocument/);
   assert.match(androidActivity, /saveStoredDocument/);
+  assert.match(androidActivity, /AndroidKeyStore/);
+  assert.match(androidActivity, /AES\/GCM\/NoPadding/);
+  assert.match(androidActivity, /CipherOutputStream/);
+  assert.match(androidActivity, /shouldOverrideUrlLoading/);
+  assert.match(androidActivity, /MIXED_CONTENT_NEVER_ALLOW/);
+  assert.match(androidActivity, /Content-Security-Policy/);
   assert.match(androidActivity, /CuraFamiliaReceiveScan/);
   assert.match(androidBuild, /play-services-mlkit-document-scanner:16\.0\.0/);
   assert.doesNotMatch(androidManifest, /android\.permission\.CAMERA/);
+  assert.doesNotMatch(androidManifest, /android\.permission\.INTERNET/);
+  assert.match(androidManifest, /android:allowBackup="false"/);
   assert.doesNotMatch(androidActivity, /file:\/\/\/android_asset/);
   await assert.rejects(access(new URL("../app/_sites-preview", root)));
 });
