@@ -44,7 +44,7 @@ const hasHostOverride = cliArguments.some(
 );
 
 if (hasHostOverride) {
-  throw new Error("O servidor local sempre usa 127.0.0.1; não altere o hostname.");
+  throw new Error("O servidor sempre usa o hostname local fixo.");
 }
 
 const hasPortOverride = cliArguments.some(

@@ -31,7 +31,7 @@ Os principais requisitos foram:
 ## Solução
 
 ```text
-Navegador em 127.0.0.1
+Navegador local
         │
         ├──> interface React ──> API local ──> validação ──> AES-256-GCM ──> D1 local
         │

@@ -17,7 +17,7 @@ navegador local e ao aplicativo Android empacotado em uma WebView segura.
 [Roadmap](docs/ROADMAP.md) ·
 [Guia do projeto público](docs/GUIA_PROJETO_PUBLICO.md) ·
 [Segurança](SECURITY.md) ·
-[Build de teste](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml) ·
+[Baixar APK de teste](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/app-debug.apk) ·
 [Releases](https://github.com/ninex9x/cura-family/releases)
 
 ## Recursos
@@ -50,8 +50,8 @@ npm ci
 npm run dev
 ```
 
-A aplicação abre em `http://127.0.0.1:3001`. O servidor não escuta em interfaces
-de rede externas.
+O comando inicia a interface e a API somente no computador local. O endereço
+correto é exibido pelo terminal durante a inicialização.
 
 Na primeira execução, `scripts/dev.mjs` cria uma chave aleatória em `.dev.vars`
 e restringe o arquivo ao usuário atual. O valor não aparece no terminal e o
@@ -59,7 +59,7 @@ arquivo é ignorado pelo Git. `.dev.vars.example` documenta apenas o formato.
 
 O modo local:
 
-- usa exclusivamente `127.0.0.1`;
+- aceita conexões apenas do próprio dispositivo;
 - mantém os dados na máquina do usuário;
 - não exige conta ou autenticação externa;
 - não envia informações para uma demonstração pública;
@@ -69,7 +69,7 @@ O modo local:
 
 | Comando | Finalidade |
 | --- | --- |
-| `npm run dev` | Inicia interface e API em `127.0.0.1:3001` |
+| `npm run dev` | Inicia a interface e a API locais |
 | `npm start` | Inicia o mesmo ambiente local |
 | `npm run typecheck` | Verifica os tipos TypeScript |
 | `npm run lint` | Executa análise estática |
@@ -131,10 +131,8 @@ issues, testes ou capturas públicas.
 
 ### Build de teste
 
-Cada envio para `main` compila um APK de depuração no GitHub Actions. Abra a
-[execução mais recente do CI](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml),
-selecione uma execução concluída com sucesso e baixe `cura-family-debug-*` na
-seção **Artifacts**. O arquivo fica disponível por sete dias.
+[Baixe diretamente o `app-debug.apk`](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/app-debug.apk)
+e abra o arquivo em um aparelho Android para instalar e executar a aplicação.
 
 Esse APK é uma build de teste, não uma versão de produção assinada. Depois de
 instalado, o aplicativo funciona localmente no dispositivo Android e não usa um
