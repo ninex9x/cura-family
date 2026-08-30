@@ -36,6 +36,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 .dev.vars*
+!.dev.vars.example
 
 # vercel
 .vercel
@@ -55,9 +56,5 @@ next-env.d.ts
 /android/app/google-services.json
 /android/app/src/main/assets/www/
 
-# graphify machine-local state and session memory
-/graphify-out/.*
-/graphify-out/cache/
-/graphify-out/memory/
-/graphify-out/reflections/
-/graphify-out/20??-??-??/
+# generated architecture reports and machine-local analysis state
+/graphify-out/

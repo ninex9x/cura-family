@@ -1,0 +1,3 @@
+# O servidor local cria .dev.vars automaticamente na primeira execução.
+# Use este arquivo apenas como referência e nunca registre a chave real no Git.
+LOCAL_DATA_ENCRYPTION_KEY=replace-with-base64-encoded-32-byte-key
