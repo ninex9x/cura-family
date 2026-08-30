@@ -32,4 +32,4 @@ de saúde.
 - [ ] Documentar migrações de dados entre versões do aplicativo
 
 Sugestões podem ser abertas como issue usando somente dados fictícios.
-Vulnerabilidades devem seguir a política em [SECURITY.md](../SECURITY.md).
+Vulnerabilidades devem seguir a política em [SECURITY.md](../../.github/SECURITY.md).

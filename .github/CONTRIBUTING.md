@@ -21,6 +21,8 @@ portfólio, mas a aplicação continua destinada exclusivamente à execução lo
 
 ## Desenvolvimento
 
+No diretório `app/`:
+
 ```bash
 npm ci
 npm run dev

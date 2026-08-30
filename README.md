@@ -1,8 +1,9 @@
 # CuraFamília
 
-[![CI](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml/badge.svg)](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml)
-[![Protegido por Gitleaks](https://img.shields.io/badge/protected%20by-gitleaks-blue)](https://github.com/gitleaks/gitleaks)
-[![Execução local](https://img.shields.io/badge/runtime-local--only-cc0000)](#início-rápido)
+[![Build clients](https://github.com/ninex9x/cura-family/actions/workflows/build-clients.yml/badge.svg)](https://github.com/ninex9x/cura-family/actions/workflows/build-clients.yml)
+[![Secret scan](https://github.com/ninex9x/cura-family/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/ninex9x/cura-family/actions/workflows/secret-scan.yml)
+
+[**▶ Baixar aplicativo Android de teste**](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/CuraFamilia-1.0.3-android-debug.apk)
 
 Aplicação local-first para organizar familiares, medicamentos, horários,
 registros de doses e documentos de saúde. A mesma experiência React atende ao
@@ -13,11 +14,9 @@ navegador local e ao aplicativo Android empacotado em uma WebView segura.
 > aplicação funciona exclusivamente no dispositivo local. Não existe demo,
 > backend, banco ou ambiente de produção hospedado.
 
-[Estudo de caso](docs/CASE_STUDY.md) ·
-[Roadmap](docs/ROADMAP.md) ·
-[Guia do projeto público](docs/GUIA_PROJETO_PUBLICO.md) ·
-[Segurança](SECURITY.md) ·
-[Baixar APK de teste](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/CuraFamilia-1.0.3-android-debug.apk) ·
+[Estudo de caso](app/docs/CASE_STUDY.md) ·
+[Roadmap](app/docs/ROADMAP.md) ·
+[Guia do projeto público](app/docs/GUIA_PROJETO_PUBLICO.md) ·
 [Releases](https://github.com/ninex9x/cura-family/releases)
 
 ## Recursos
@@ -45,7 +44,7 @@ Clone, instale exatamente as dependências do lockfile e inicie:
 
 ```bash
 git clone https://github.com/ninex9x/cura-family.git
-cd cura-family
+cd cura-family/app
 npm ci
 npm run dev
 ```
@@ -56,6 +55,9 @@ correto é exibido pelo terminal durante a inicialização.
 Na primeira execução, `scripts/dev.mjs` cria uma chave aleatória em `.dev.vars`
 e restringe o arquivo ao usuário atual. O valor não aparece no terminal e o
 arquivo é ignorado pelo Git. `.dev.vars.example` documenta apenas o formato.
+
+Todos os comandos npm e Gradle das próximas seções consideram o diretório
+`app/` como diretório atual.
 
 O modo local:
 
@@ -161,17 +163,20 @@ ignorado pelo Git.
 ## Estrutura do projeto
 
 ```text
-.github/               CI e templates da comunidade
-app/                   interface React e API local
-db/                    acesso ao D1 local
-docs/                  estudo de caso, roadmap e guia público
-drizzle/               schema e migração idempotente
-lib/                   domínio, validação e criptografia
-mobile/                entrada Vite usada pelo Android
-android/               WebView, Keystore e scanner nativos
-scripts/               inicialização segura do ambiente local
-tests/                 testes de domínio, renderização e cofre
-worker/                entrada Vinext do servidor local
+.github/                 workflows e arquivos da comunidade
+app/
+├── .openai/             recursos declarados somente para desenvolvimento local
+├── android/             WebView, Keystore e scanner nativos
+├── app/                 interface React e API local
+├── db/                  acesso ao D1 local
+├── docs/                estudo de caso, roadmap e guia público
+├── drizzle/             schema e migração idempotente
+├── lib/                 domínio, validação e criptografia
+├── mobile/              entrada Vite usada pelo Android
+├── scripts/             inicialização segura do ambiente local
+├── tests/               testes de domínio, renderização e cofre
+└── worker/              entrada Vinext do servidor local
+README.md                apresentação e início rápido
 ```
 
 ## Qualidade e automação
@@ -191,21 +196,21 @@ dependências e relatos privados de vulnerabilidade habilitados no GitHub.
 ## Repositório público, aplicação local
 
 O repositório é público, mas não possui GitHub Pages, homepage de demonstração
-ou configuração de deploy. `.openai/hosting.json` declara apenas recursos usados
+ou configuração de deploy. `app/.openai/hosting.json` declara apenas recursos usados
 no desenvolvimento local e não contém `project_id`.
 
 Essa separação permite avaliar arquitetura, qualidade e segurança sem oferecer
 um serviço público para dados de saúde. O processo está detalhado no
-[guia do projeto público](docs/GUIA_PROJETO_PUBLICO.md).
+[guia do projeto público](app/docs/GUIA_PROJETO_PUBLICO.md).
 
 ## Contribuindo
 
 Use os templates de bug, melhoria e pull request. Antes de enviar uma mudança,
 execute todos os comandos de validação e confirme que nenhum dado real, segredo,
-banco ou artefato foi incluído. Veja [CONTRIBUTING.md](CONTRIBUTING.md).
+banco ou artefato foi incluído. Veja [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 Vulnerabilidades devem ser relatadas de forma privada conforme
-[SECURITY.md](SECURITY.md), nunca em uma issue pública.
+[.github/SECURITY.md](.github/SECURITY.md), nunca em uma issue pública.
 
 ## Licença
 

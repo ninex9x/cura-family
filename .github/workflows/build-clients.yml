@@ -1,4 +1,4 @@
-name: CI
+name: Build clients
 
 on:
   push:
@@ -18,6 +18,9 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -27,6 +30,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: app/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -57,6 +61,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: app/package-lock.json
 
       - name: Set up Java
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -66,13 +71,15 @@ jobs:
           cache: gradle
 
       - name: Install dependencies
+        working-directory: app
         run: npm ci
 
       - name: Build Android web assets
+        working-directory: app
         run: npm run build:mobile
 
       - name: Build debug APK
-        working-directory: android
+        working-directory: app/android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
@@ -81,26 +88,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: cura-family-debug-${{ github.run_number }}
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: CuraFamilia-Android
+          path: app/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
-
-  secrets:
-    name: Secret scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout full history
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Scan Git history
-        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
-          GITLEAKS_VERSION: 8.30.1
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false

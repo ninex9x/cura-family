@@ -8,6 +8,8 @@
 
 ## Validação
 
+No diretório `app/`:
+
 - [ ] Executei `npm run typecheck`
 - [ ] Executei `npm run lint`
 - [ ] Executei `npm test`
