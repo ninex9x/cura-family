@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   validateAppState,
   type AppState,
@@ -16,6 +16,7 @@ import {
 
 type View = "today" | "family" | "medicines" | "history" | "documents";
 type Modal = "member" | "drug" | "presentation" | "routine" | "document" | "document-viewer" | null;
+type Theme = "light" | "dark";
 declare global {
   interface Window {
     CuraFamiliaAndroid?: {
@@ -145,6 +146,8 @@ type PersistedState = {
 };
 
 const STORAGE_KEY = "cuidar-med-family-v1";
+const THEME_STORAGE_KEY = "cura-family-theme";
+const THEME_CHANGE_EVENT = "cura-family-theme-change";
 const STATE_API_PATH = "/api/state";
 const BACKEND_SAVE_DELAY_MS = 600;
 const HISTORY_PAGE_SIZE = 5;
@@ -161,6 +164,19 @@ const DOCUMENT_CATEGORY_DETAILS: Record<DocumentCategory, { label: string; icon:
 };
 const MEMBER_COLORS = ["#a43c12", "#016b54", "#075fab", "#7a4f9a", "#b17800"];
 const MEDICINE_COLORS = ["#a43c12", "#016b54", "#075fab", "#8a4d8d", "#b46b00"];
+
+function subscribeToTheme(onThemeChange: () => void) {
+  window.addEventListener(THEME_CHANGE_EVENT, onThemeChange);
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, onThemeChange);
+}
+
+function getThemeSnapshot(): Theme {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function getServerThemeSnapshot(): Theme {
+  return "light";
+}
 
 function Icon({ children, filled = false }: { children: string; filled?: boolean }) {
   return <span className={`material-symbols-outlined${filled ? " icon-filled" : ""}`} aria-hidden="true">{children}</span>;
@@ -426,6 +442,7 @@ export default function Home() {
   const [nativeDocumentScan, setNativeDocumentScan] = useState<NativeDocumentScan | null>(null);
   const [documentPreparing, setDocumentPreparing] = useState(false);
   const documentSearchRef = useRef<HTMLInputElement>(null);
+  const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [hydrated, setHydrated] = useState(false);
   const [clockMinutes, setClockMinutes] = useState(12 * 60);
   const [today, setToday] = useState("2024-01-15");
@@ -674,6 +691,15 @@ export default function Home() {
   function navigate(nextView: View) {
     setView(nextView);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function toggleTheme() {
+    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = nextTheme;
+    document.documentElement.style.colorScheme = nextTheme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", nextTheme === "dark" ? "#0f0f0f" : "#f4f1ea");
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   }
 
   function openDocuments(memberId?: string) {
@@ -980,17 +1006,26 @@ export default function Home() {
         <nav className="desktop-navigation" aria-label="Navegação principal">
           {navItems.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => item.id === "documents" ? openDocuments() : navigate(item.id)}><Icon filled={view === item.id}>{item.icon}</Icon><span>{item.label}</span></button>)}
         </nav>
-        {view === "documents" && <button className="sidebar-add-button" onClick={() => setModal("document")}><Icon>upload_file</Icon>Adicionar Novo</button>}
+        <div className="sidebar-footer-actions">
+          <button className="theme-toggle sidebar-theme-toggle" type="button" onClick={toggleTheme} aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} aria-pressed={theme === "dark"}>
+            <Icon>{theme === "dark" ? "light_mode" : "dark_mode"}</Icon>
+            <span>{theme === "dark" ? "Modo claro" : "Modo escuro"}</span>
+          </button>
+          {view === "documents" && <button className="sidebar-add-button" onClick={() => setModal("document")}><Icon>upload_file</Icon>Adicionar Novo</button>}
+        </div>
       </aside>
 
       <section className="app-canvas">
         <header className={`mobile-topbar ${view === "family" || view === "medicines" || view === "documents" ? "action-mobile-topbar" : ""}`}>
           <button className="mobile-brand" onClick={() => navigate("today")}>CuraFamília</button>
           {view === "family" || view === "medicines" || view === "documents" ? <div className="mobile-header-actions">
+            <button className="mobile-theme-toggle" type="button" aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} aria-pressed={theme === "dark"} onClick={toggleTheme}><Icon>{theme === "dark" ? "light_mode" : "dark_mode"}</Icon></button>
             <button aria-label={view === "documents" ? "Pesquisar documentos" : "Notificações"} onClick={() => view === "documents" ? focusDocumentSearch() : setToast("Você não tem novas notificações")}><Icon>{view === "documents" ? "search" : "notifications"}</Icon></button>
             <button aria-label={view === "documents" ? "Notificações" : "Ajuda"} onClick={() => setToast(view === "documents" ? "Você não tem novas notificações" : view === "family" ? "Use Adicionar Familiar para criar um novo perfil" : "Use Novo Medicamento para cadastrar uma rotina")}><Icon>{view === "documents" ? "notifications" : "help_outline"}</Icon></button>
-            {view === "medicines" && <span className="avatar avatar-mobile" style={{ background: "#a43c12" }}>CF</span>}
-          </div> : selectedMember ? <MemberAvatar member={selectedMember} avatarClassName="avatar avatar-mobile" photoClassName="avatar-mobile member-mobile-photo" /> : null}
+          </div> : <div className="mobile-header-actions">
+            <button className="mobile-theme-toggle" type="button" aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} aria-pressed={theme === "dark"} onClick={toggleTheme}><Icon>{theme === "dark" ? "light_mode" : "dark_mode"}</Icon></button>
+            {selectedMember ? <MemberAvatar member={selectedMember} avatarClassName="avatar avatar-mobile" photoClassName="avatar-mobile member-mobile-photo" /> : null}
+          </div>}
         </header>
 
         <div className="content-container">
@@ -1067,13 +1102,13 @@ export default function Home() {
               <button onClick={() => openMemberModal()}><Icon>person_add</Icon>Adicionar Familiar</button>
             </header>
             <div className="family-bento-grid">
-              {state.members.map((member, index) => {
+              {state.members.map((member) => {
                 const memberMedicines = state.routines.filter((routine) => routine.memberId === member.id && routine.active !== false);
                 const memberDoses = doses.filter((dose) => dose.member.id === member.id);
                 const completed = memberDoses.filter((dose) => dose.log?.status === "taken").length;
                 const memberProgress = memberDoses.length ? Math.round(completed / memberDoses.length * 100) : 0;
                 return <article className="family-profile-card" key={member.id}>
-                  <span className="family-card-decoration" style={{ background: index % 2 === 0 ? "rgba(155,240,210,.35)" : "rgba(255,127,80,.28)" }} />
+                  <span className="family-card-decoration" />
                   <div className="family-card-header">
                     <div className="family-card-person">
                       <MemberAvatar member={member} avatarClassName="avatar family-card-avatar" photoClassName="family-card-photo" />
