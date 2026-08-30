@@ -1,13 +1,23 @@
-# Contribuindo
+# Como contribuir
 
-Obrigado pelo interesse no CuraFamília. O código é público para estudo e portfólio, mas o aplicativo continua destinado exclusivamente à execução local.
+Obrigado pelo interesse no CuraFamília. O código é público para avaliação e
+portfólio, mas a aplicação continua destinada exclusivamente à execução local.
 
-## Antes de começar
+## Fluxo recomendado
+
+1. Abra uma issue antes de iniciar mudanças maiores.
+2. Crie uma branch curta e focada.
+3. Implemente a alteração usando somente dados fictícios.
+4. Execute toda a validação local.
+5. Abra um pull request explicando problema, solução e evidências.
+
+## Privacidade e segurança
 
 - não inclua nomes, documentos, fotos ou informações médicas reais;
-- não registre `.dev.vars`, bancos, chaves, certificados, APKs ou artefatos de build;
-- não adicione configuração de deploy, domínio público ou `project_id`;
-- use dados fictícios em testes e exemplos.
+- não versione `.dev.vars`, bancos, backups, certificados, APKs ou builds;
+- não adicione domínio, configuração de deploy ou `project_id`;
+- revise logs e capturas para remover caminhos e notificações pessoais;
+- relate vulnerabilidades pelo canal privado em [SECURITY.md](SECURITY.md).
 
 ## Desenvolvimento
 
@@ -16,7 +26,7 @@ npm ci
 npm run dev
 ```
 
-Antes de abrir um pull request, execute:
+Antes de abrir um pull request:
 
 ```bash
 npm run typecheck
@@ -25,4 +35,10 @@ npm test
 npm run build:mobile
 ```
 
-Relate vulnerabilidades pelo canal privado descrito em `SECURITY.md`, nunca em uma issue pública.
+Mudanças na integração Android também devem validar o APK. No Windows:
+
+```powershell
+npm run android:apk
+```
+
+Capturas de interface devem usar os dados fictícios incluídos no projeto.

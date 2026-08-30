@@ -2,104 +2,201 @@
 
 [![CI](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml/badge.svg)](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml)
 [![Protegido por Gitleaks](https://img.shields.io/badge/protected%20by-gitleaks-blue)](https://github.com/gitleaks/gitleaks)
-[![Execução local](https://img.shields.io/badge/runtime-local--only-075fab)](#execução-local)
+[![Execução local](https://img.shields.io/badge/runtime-local--only-cc0000)](#início-rápido)
 
-Aplicação para organizar familiares, medicamentos, horários, registros de doses e documentos de saúde. A mesma experiência React atende ao navegador e ao aplicativo Android empacotado em uma `WebView`.
+Aplicação local-first para organizar familiares, medicamentos, horários,
+registros de doses e documentos de saúde. A mesma experiência React atende ao
+navegador local e ao aplicativo Android empacotado em uma WebView segura.
 
 > [!IMPORTANT]
-> O código-fonte é público para demonstração técnica e portfólio, mas o aplicativo é exclusivamente local. Não existe demonstração hospedada, backend público ou ambiente de produção. Os dados incluídos no repositório são fictícios.
+> O código-fonte é público para demonstração técnica e portfólio, mas a
+> aplicação funciona exclusivamente no dispositivo local. Não existe demo,
+> backend, banco ou ambiente de produção hospedado.
 
-## Principais recursos
+[Estudo de caso](docs/CASE_STUDY.md) ·
+[Roadmap](docs/ROADMAP.md) ·
+[Guia do projeto público](docs/GUIA_PROJETO_PUBLICO.md) ·
+[Segurança](SECURITY.md) ·
+[Releases](https://github.com/ninex9x/cura-family/releases)
+
+## Recursos
 
 - agenda diária de medicamentos por familiar;
 - registro de doses tomadas ou não tomadas;
 - catálogo de medicamentos, apresentações e regras de uso;
-- histórico pesquisável e paginado;
-- documentos de saúde com visualização de PDFs;
-- scanner multipágina no Android;
-- armazenamento criptografado no backend local e no Android;
+- histórico pesquisável, filtrável e paginado;
+- documentos de saúde com visualização de imagens e PDFs;
+- scanner multipágina integrado ao Android;
+- armazenamento cifrado no backend local e no Android;
+- migração segura de instalações antigas;
+- temas claro e escuro persistentes;
 - interface responsiva compartilhada entre web e mobile.
 
-## Execução local
+## Início rápido
 
 ### Requisitos
 
-- Node.js `>=22.13.0` — Node 24 LTS recomendado;
-- Java e Android SDK compatíveis com Android 34, apenas para gerar o APK.
+- Node.js `22.13.0` ou superior — Node 24 recomendado;
+- npm 10 ou superior;
+- Git.
 
-Instale exatamente as dependências do lockfile e inicie o servidor:
+Clone, instale exatamente as dependências do lockfile e inicie:
 
 ```bash
+git clone https://github.com/ninex9x/cura-family.git
+cd cura-family
 npm ci
 npm run dev
 ```
 
-A aplicação fica disponível em `http://localhost:3000`. O servidor aceita conexões somente em `127.0.0.1`.
+A aplicação abre em `http://127.0.0.1:3000`. O servidor não escuta em interfaces
+de rede externas.
 
-Na primeira execução, `scripts/dev.mjs` cria uma chave aleatória em `.dev.vars`, restringe o arquivo ao usuário atual e não mostra o valor no terminal. O arquivo é ignorado pelo Git; `.dev.vars.example` documenta somente o formato esperado.
+Na primeira execução, `scripts/dev.mjs` cria uma chave aleatória em `.dev.vars`
+e restringe o arquivo ao usuário atual. O valor não aparece no terminal e o
+arquivo é ignorado pelo Git. `.dev.vars.example` documenta apenas o formato.
 
-### Comandos
+O modo local:
+
+- usa exclusivamente `127.0.0.1`;
+- mantém os dados na máquina do usuário;
+- não exige conta ou autenticação externa;
+- não envia informações para uma demonstração pública;
+- utiliza dados fictícios até que o usuário cadastre os próprios perfis.
+
+## Comandos
 
 | Comando | Finalidade |
 | --- | --- |
-| `npm run dev` | Inicia interface e API local |
-| `npm start` | Atalho para o mesmo servidor local |
+| `npm run dev` | Inicia interface e API em `127.0.0.1:3000` |
+| `npm start` | Inicia o mesmo ambiente local |
 | `npm run typecheck` | Verifica os tipos TypeScript |
-| `npm run lint` | Executa a análise estática |
+| `npm run lint` | Executa análise estática |
 | `npm test` | Compila o app web e executa os testes |
-| `npm run build:mobile` | Gera os arquivos web usados pelo Android |
+| `npm run build:mobile` | Gera os recursos web do Android |
 | `npm run android:apk` | Gera o APK de depuração no Windows |
 
 ## Arquitetura
 
 ```text
-app/                 interface e API local
-├── api/state/       persistência GET/PUT
-└── page.tsx         experiência principal
-db/                  schema e acesso ao D1 local
-lib/                 validação e criptografia compartilhadas
-worker/              entrada Vinext/Cloudflare do servidor local
-mobile/              entrada Vite reutilizada pelo Android
-android/             WebView, scanner e armazenamento nativo
-tests/               renderização, validação e criptografia
+Navegador local
+      └──> React / Vinext ──> API local ──> validação ──> AES-256-GCM ──> D1 local
+
+Android
+      └──> React / Vite ────> WebView ────> bridge Java
+                                              ├──> Android Keystore
+                                              ├──> arquivos cifrados
+                                              └──> scanner ML Kit
 ```
 
-O binding D1 `DB` é simulado localmente pelo plugin do Cloudflare. A tabela é criada de forma idempotente; não há banco ou credencial de produção no repositório.
+No navegador, `GET /api/state` carrega o snapshot familiar e sua revisão.
+`PUT /api/state` valida tipos, tamanhos, formatos e relacionamentos antes de
+salvar. Uma revisão desatualizada recebe HTTP 409 para impedir sobrescrita
+silenciosa.
+
+No Android, a aplicação funciona offline. A WebView serve somente recursos
+empacotados em `app.local`, e uma bridge nativa controla estado, documentos,
+downloads e digitalização.
+
+## Tecnologias
+
+- TypeScript, React 19 e Next.js 16;
+- Vinext, Vite 8 e Cloudflare Workers local;
+- Drizzle ORM e D1 local;
+- AES-256-GCM e Web Crypto;
+- Java, Android WebView, Android Keystore e ML Kit;
+- Node Test Runner, ESLint e TypeScript;
+- GitHub Actions e Gitleaks.
 
 ## Persistência e segurança
 
 ### Navegador local
 
-`GET /api/state` devolve o snapshot familiar e sua revisão. `PUT /api/state` valida tipos, tamanhos, formatos e relacionamentos antes de salvar. Atualizações concorrentes recebem `409`, escritas exigem mesma origem e hosts não locais recebem `403`.
-
-O snapshot é criptografado com AES-256-GCM usando `LOCAL_DATA_ENCRYPTION_KEY`. Instalações antigas podem ser migradas uma vez do `localStorage`; a cópia anterior é removida somente depois da persistência segura.
+O snapshot é cifrado com AES-256-GCM usando `LOCAL_DATA_ENCRYPTION_KEY`. Hosts
+não locais recebem `403`, escritas exigem mesma origem e o estado completo passa
+por validação antes de chegar ao banco.
 
 ### Android
 
-O APK funciona offline. Estado, fotos incorporadas e PDFs digitalizados são criptografados por uma chave AES não exportável do Android Keystore. O backup do aplicativo é desabilitado, documentos antigos são migrados e a WebView bloqueia navegação, conteúdo misto e recursos fora de `app.local`.
+A chave AES é não exportável e fica no Android Keystore. Estado, fotos e PDFs
+são cifrados antes da gravação. Backups do aplicativo estão desabilitados, e a
+WebView bloqueia navegação externa, conteúdo misto e recursos fora da origem
+local empacotada.
 
-## Dados de demonstração
+Nunca envie nomes, fotos, documentos ou informações médicas reais em commits,
+issues, testes ou capturas públicas.
 
-A primeira execução apresenta uma família e medicamentos fictícios para tornar os fluxos verificáveis sem dados reais. Não use capturas de tela, commits, issues ou pull requests contendo informações pessoais ou médicas verdadeiras.
+## Android
 
-## Qualidade e segurança do repositório
+O projeto requer JDK 17 e Android SDK 34. No Windows:
+
+```powershell
+npm run android:apk
+```
+
+No Linux ou macOS:
+
+```bash
+npm run build:mobile
+cd android
+chmod +x gradlew
+./gradlew assembleDebug --no-daemon
+```
+
+O APK é criado em `android/app/build/outputs/apk/debug/app-debug.apk`, caminho
+ignorado pelo Git.
+
+## Estrutura do projeto
+
+```text
+.github/               CI e templates da comunidade
+app/                   interface React e API local
+db/                    acesso ao D1 local
+docs/                  estudo de caso, roadmap e guia público
+drizzle/               schema e migração idempotente
+lib/                   domínio, validação e criptografia
+mobile/                entrada Vite usada pelo Android
+android/               WebView, Keystore e scanner nativos
+scripts/               inicialização segura do ambiente local
+tests/                 testes de domínio, renderização e cofre
+worker/                entrada Vinext do servidor local
+```
+
+## Qualidade e automação
 
 Cada push e pull request executa:
 
 - instalação reproduzível com `npm ci`;
-- typecheck, lint, testes e build web;
+- typecheck e lint;
+- testes e build web;
 - build dos recursos mobile;
+- compilação do APK Android;
 - varredura completa do histórico com Gitleaks.
 
-Vulnerabilidades devem ser relatadas de forma privada conforme [SECURITY.md](SECURITY.md). Orientações para contribuições estão em [CONTRIBUTING.md](CONTRIBUTING.md).
+O repositório também mantém secret scanning, push protection, alertas de
+dependências e relatos privados de vulnerabilidade habilitados no GitHub.
 
-## Limitações conhecidas
+## Repositório público, aplicação local
 
-- não há sincronização entre dispositivos ou contas;
-- não há autenticação multiusuário;
-- o projeto não deve ser implantado em hospedagem pública;
-- o app auxilia a organização e não substitui orientação médica.
+O repositório é público, mas não possui GitHub Pages, homepage de demonstração
+ou configuração de deploy. `.openai/hosting.json` declara apenas recursos usados
+no desenvolvimento local e não contém `project_id`.
+
+Essa separação permite avaliar arquitetura, qualidade e segurança sem oferecer
+um serviço público para dados de saúde. O processo está detalhado no
+[guia do projeto público](docs/GUIA_PROJETO_PUBLICO.md).
+
+## Contribuindo
+
+Use os templates de bug, melhoria e pull request. Antes de enviar uma mudança,
+execute todos os comandos de validação e confirme que nenhum dado real, segredo,
+banco ou artefato foi incluído. Veja [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Vulnerabilidades devem ser relatadas de forma privada conforme
+[SECURITY.md](SECURITY.md), nunca em uma issue pública.
 
 ## Licença
 
-Este repositório não possui licença de código aberto. Sua publicação permite visualização e avaliação do projeto, mas não concede permissão automática para copiar, modificar ou redistribuir o código.
+Este repositório não possui licença de código aberto. A publicação permite
+visualização e avaliação do projeto, mas não concede permissão automática para
+copiar, modificar ou redistribuir o código.
