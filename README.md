@@ -7,6 +7,10 @@
 
 [**▶ Baixar aplicativo Android de teste**](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/CuraFamilia-1.0.3-android-debug.apk)
 
+| Hoje | Familiares | Medicamentos |
+| --- | --- | --- |
+| ![Agenda diária do CuraFamília](app/docs/assets/cura-family-today.png) | ![Perfis familiares do CuraFamília](app/docs/assets/cura-family-family.png) | ![Gestão de medicamentos do CuraFamília](app/docs/assets/cura-family-medicines.png) |
+
 Aplicação local-first para organizar familiares, medicamentos, horários,
 registros de doses e documentos de saúde. A mesma experiência React atende ao
 navegador local e ao aplicativo Android empacotado em uma WebView segura.
