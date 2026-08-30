@@ -33,7 +33,35 @@ async function ensureEncryptionSecret() {
 await ensureEncryptionSecret();
 
 const vinextCli = resolve(projectRoot, "node_modules/vinext/dist/cli.js");
-const child = spawn(process.execPath, [vinextCli, "dev", "--host", "127.0.0.1", ...process.argv.slice(2)], {
+const cliArguments = process.argv.slice(2);
+const hasHostOverride = cliArguments.some(
+  (argument) =>
+    argument === "--hostname" ||
+    argument.startsWith("--hostname=") ||
+    argument === "--host" ||
+    argument.startsWith("--host=") ||
+    argument === "-H",
+);
+
+if (hasHostOverride) {
+  throw new Error("O servidor local sempre usa 127.0.0.1; não altere o hostname.");
+}
+
+const hasPortOverride = cliArguments.some(
+  (argument) =>
+    argument === "--port" ||
+    argument.startsWith("--port=") ||
+    argument === "-p",
+);
+const serverArguments = [vinextCli, "dev", "--hostname", "127.0.0.1"];
+
+if (!hasPortOverride) {
+  serverArguments.push("--port", "3001");
+}
+
+serverArguments.push(...cliArguments);
+
+const child = spawn(process.execPath, serverArguments, {
   cwd: projectRoot,
   env: process.env,
   stdio: "inherit",

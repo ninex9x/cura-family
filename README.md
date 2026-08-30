@@ -17,6 +17,7 @@ navegador local e ao aplicativo Android empacotado em uma WebView segura.
 [Roadmap](docs/ROADMAP.md) ·
 [Guia do projeto público](docs/GUIA_PROJETO_PUBLICO.md) ·
 [Segurança](SECURITY.md) ·
+[Build de teste](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml) ·
 [Releases](https://github.com/ninex9x/cura-family/releases)
 
 ## Recursos
@@ -49,7 +50,7 @@ npm ci
 npm run dev
 ```
 
-A aplicação abre em `http://127.0.0.1:3000`. O servidor não escuta em interfaces
+A aplicação abre em `http://127.0.0.1:3001`. O servidor não escuta em interfaces
 de rede externas.
 
 Na primeira execução, `scripts/dev.mjs` cria uma chave aleatória em `.dev.vars`
@@ -68,7 +69,7 @@ O modo local:
 
 | Comando | Finalidade |
 | --- | --- |
-| `npm run dev` | Inicia interface e API em `127.0.0.1:3000` |
+| `npm run dev` | Inicia interface e API em `127.0.0.1:3001` |
 | `npm start` | Inicia o mesmo ambiente local |
 | `npm run typecheck` | Verifica os tipos TypeScript |
 | `npm run lint` | Executa análise estática |
@@ -127,6 +128,19 @@ Nunca envie nomes, fotos, documentos ou informações médicas reais em commits,
 issues, testes ou capturas públicas.
 
 ## Android
+
+### Build de teste
+
+Cada envio para `main` compila um APK de depuração no GitHub Actions. Abra a
+[execução mais recente do CI](https://github.com/ninex9x/cura-family/actions/workflows/ci.yml),
+selecione uma execução concluída com sucesso e baixe `cura-family-debug-*` na
+seção **Artifacts**. O arquivo fica disponível por sete dias.
+
+Esse APK é uma build de teste, não uma versão de produção assinada. Depois de
+instalado, o aplicativo funciona localmente no dispositivo Android e não usa um
+backend hospedado.
+
+### Compilar localmente
 
 O projeto requer JDK 17 e Android SDK 34. No Windows:
 
