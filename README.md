@@ -17,7 +17,7 @@ navegador local e ao aplicativo Android empacotado em uma WebView segura.
 [Roadmap](docs/ROADMAP.md) ·
 [Guia do projeto público](docs/GUIA_PROJETO_PUBLICO.md) ·
 [Segurança](SECURITY.md) ·
-[Baixar APK de teste](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/app-debug.apk) ·
+[Baixar APK de teste](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/CuraFamilia-1.0.3-android-debug.apk) ·
 [Releases](https://github.com/ninex9x/cura-family/releases)
 
 ## Recursos
@@ -131,7 +131,7 @@ issues, testes ou capturas públicas.
 
 ### Build de teste
 
-[Baixe diretamente o `app-debug.apk`](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/app-debug.apk)
+[Baixe diretamente o `CuraFamilia-1.0.3-android-debug.apk`](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/CuraFamilia-1.0.3-android-debug.apk)
 e abra o arquivo em um aparelho Android para instalar e executar a aplicação.
 
 Esse APK é uma build de teste, não uma versão de produção assinada. Depois de
