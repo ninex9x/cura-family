@@ -15,4 +15,8 @@ Inclua, quando possível:
 - impacto esperado;
 - sugestão de correção, se houver.
 
-O projeto não oferece uma instância hospedada. Problemas relacionados a serviços implantados, domínios públicos ou ambientes de produção estão fora do modelo de execução suportado.
+O GitHub Pages oferece apenas uma demonstração estática com dados fictícios
+mantidos na sessão do navegador. Ele não hospeda a API, o banco, documentos ou
+dados reais. A aplicação com persistência continua somente local. Relatos sobre
+um possível acesso da demonstração a recursos reais devem ser enviados pelo
+canal privado.

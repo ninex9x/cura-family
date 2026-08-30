@@ -1,7 +1,8 @@
 # Como contribuir
 
 Obrigado pelo interesse no CuraFamília. O código é público para avaliação e
-portfólio, mas a aplicação continua destinada exclusivamente à execução local.
+portfólio. A aplicação real continua local, enquanto a demonstração pública é
+estática e usa somente dados fictícios na sessão do navegador.
 
 ## Fluxo recomendado
 
@@ -15,7 +16,8 @@ portfólio, mas a aplicação continua destinada exclusivamente à execução lo
 
 - não inclua nomes, documentos, fotos ou informações médicas reais;
 - não versione `.dev.vars`, bancos, backups, certificados, APKs ou builds;
-- não adicione domínio, configuração de deploy ou `project_id`;
+- não conecte a demonstração à API real, D1, uploads ou qualquer backend;
+- não use Sites nem adicione `project_id` a `.openai/hosting.json`;
 - revise logs e capturas para remover caminhos e notificações pessoais;
 - relate vulnerabilidades pelo canal privado em [SECURITY.md](SECURITY.md).
 
@@ -34,6 +36,7 @@ Antes de abrir um pull request:
 npm run typecheck
 npm run lint
 npm test
+npm run build:demo
 npm run build:mobile
 ```
 

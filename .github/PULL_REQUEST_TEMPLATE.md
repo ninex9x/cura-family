@@ -13,10 +13,11 @@ No diretório `app/`:
 - [ ] Executei `npm run typecheck`
 - [ ] Executei `npm run lint`
 - [ ] Executei `npm test`
+- [ ] Executei `npm run build:demo` quando a interface ou a demonstração mudou
 - [ ] Executei `npm run build:mobile` quando a interface compartilhada mudou
 - [ ] Validei o APK quando a integração Android mudou
 - [ ] Não incluí dados reais, segredos, bancos ou artefatos gerados
-- [ ] Mantive a aplicação exclusivamente local, sem deploy ou `project_id`
+- [ ] Mantive a demo isolada, sem API real, D1, dados reais, Sites ou `project_id`
 - [ ] Atualizei a documentação quando necessário
 
 ## Segurança e privacidade

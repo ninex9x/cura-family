@@ -1,0 +1,3 @@
+html, body, #root { min-height: 100%; }
+body { overscroll-behavior-y: none; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }

@@ -1,8 +1,9 @@
-# Guia para publicar o código sem hospedar a aplicação
+# Guia para publicar o código e uma demonstração segura
 
 Este roteiro documenta o processo usado no CuraFamília: tornar o repositório
-público para portfólio mantendo a aplicação, o banco e todos os dados somente
-no computador ou dispositivo do usuário.
+público para portfólio, oferecer uma demonstração estática com dados fictícios e
+manter a aplicação real, o banco e os dados de saúde somente no dispositivo do
+usuário.
 
 ## 1. Preserve um backup privado
 
@@ -30,16 +31,18 @@ O `.gitignore` deve cobrir segredos, bancos, builds e artefatos nativos. Arquivo
 de exemplo devem conter somente placeholders. Um scanner de segredos deve rodar
 antes do envio e novamente no CI.
 
-## 4. Separe código público de aplicação pública
+## 4. Isole a demonstração da aplicação real
 
-Um repositório `Public` não exige uma aplicação hospedada. Para um produto com
-dados de saúde:
+Uma demonstração pública de um produto com dados de saúde deve ser apenas um
+cliente estático e descartável:
 
-- não configure GitHub Pages;
-- não adicione domínio ou URL de demonstração;
+- publique no GitHub Pages somente o build da entrada `demo/`;
+- use exclusivamente dados fictícios;
+- mantenha mudanças em memória ou `sessionStorage` da aba;
+- não conecte a API local, D1, uploads, documentos ou chaves reais;
 - não publique backend ou banco;
-- não adicione `project_id` a `.openai/hosting.json`;
-- documente claramente que `localhost` é o único ambiente suportado.
+- não use Sites nem adicione `project_id` a `.openai/hosting.json`;
+- documente que a aplicação real e os dados de saúde são exclusivamente locais.
 
 ## 5. Prepare a apresentação técnica
 
@@ -64,6 +67,7 @@ npm ci
 npm run typecheck
 npm run lint
 npm test
+npm run build:demo
 npm run build:mobile
 ```
 
@@ -82,9 +86,10 @@ npm run android:apk
 - [ ] README, estudo de caso e roadmap revisados
 - [ ] Templates e política de segurança disponíveis
 - [ ] CI aprovado
-- [ ] GitHub Pages e outras hospedagens desativadas
+- [ ] GitHub Pages contém somente o build estático e fictício da demonstração
+- [ ] Demonstração sem API real, D1, uploads, segredos ou backend
 - [ ] `.openai/hosting.json` sem `project_id`
 - [ ] Ausência de licença documentada conscientemente
 
-O objetivo é permitir avaliação do código sem ampliar a superfície de risco da
-aplicação nem transformar dados locais em um serviço público.
+O objetivo é permitir avaliação do código e da interface sem transformar dados
+locais ou funções sensíveis em um serviço público.

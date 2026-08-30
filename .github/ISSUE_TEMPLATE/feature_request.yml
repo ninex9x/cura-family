@@ -25,12 +25,13 @@ body:
         - Todas
         - Navegador local
         - Android
+        - Demonstração pública
     validations:
       required: true
   - type: checkboxes
-    id: local_only
+    id: privacy
     attributes:
       label: Privacidade
       options:
-        - label: A proposta mantém dados e execução somente no dispositivo local.
+        - label: A proposta mantém dados reais somente no dispositivo local e não conecta a demonstração a um backend.
           required: true

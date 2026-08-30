@@ -30,6 +30,7 @@ body:
       options:
         - Navegador local
         - Android
+        - Demonstração pública
         - Build ou CI
     validations:
       required: true

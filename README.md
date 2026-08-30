@@ -3,6 +3,8 @@
 [![Build clients](https://github.com/ninex9x/cura-family/actions/workflows/build-clients.yml/badge.svg)](https://github.com/ninex9x/cura-family/actions/workflows/build-clients.yml)
 [![Secret scan](https://github.com/ninex9x/cura-family/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/ninex9x/cura-family/actions/workflows/secret-scan.yml)
 
+[**▶ Abrir demonstração online**](https://ninex9x.github.io/cura-family/)
+
 [**▶ Baixar aplicativo Android de teste**](https://github.com/ninex9x/cura-family/releases/download/v1.0.3-test.1/CuraFamilia-1.0.3-android-debug.apk)
 
 Aplicação local-first para organizar familiares, medicamentos, horários,
@@ -10,9 +12,9 @@ registros de doses e documentos de saúde. A mesma experiência React atende ao
 navegador local e ao aplicativo Android empacotado em uma WebView segura.
 
 > [!IMPORTANT]
-> O código-fonte é público para demonstração técnica e portfólio, mas a
-> aplicação funciona exclusivamente no dispositivo local. Não existe demo,
-> backend, banco ou ambiente de produção hospedado.
+> A aplicação real e os dados de saúde funcionam exclusivamente no dispositivo
+> local. A demonstração pública é uma versão estática, usa somente dados
+> fictícios na sessão do navegador e não possui API, banco ou backend hospedado.
 
 [Estudo de caso](app/docs/CASE_STUDY.md) ·
 [Roadmap](app/docs/ROADMAP.md) ·
@@ -31,6 +33,19 @@ navegador local e ao aplicativo Android empacotado em uma WebView segura.
 - migração segura de instalações antigas;
 - temas claro e escuro persistentes;
 - interface responsiva compartilhada entre web e mobile.
+
+## Demonstração pública
+
+[Experimente o CuraFamília no navegador](https://ninex9x.github.io/cura-family/)
+sem instalar nada. Essa versão serve apenas para explorar a interface:
+
+- começa com perfis e medicamentos fictícios;
+- guarda alterações somente na aba atual com `sessionStorage`;
+- permite redefinir todos os dados pelo aviso de demonstração;
+- não acessa a API local, D1, documentos reais ou qualquer backend;
+- apaga a sessão quando a aba é encerrada.
+
+Não informe nomes, fotos, documentos ou dados médicos reais na demonstração.
 
 ## Início rápido
 
@@ -76,6 +91,7 @@ O modo local:
 | `npm run typecheck` | Verifica os tipos TypeScript |
 | `npm run lint` | Executa análise estática |
 | `npm test` | Compila o app web e executa os testes |
+| `npm run build:demo` | Gera a demonstração estática com dados fictícios |
 | `npm run build:mobile` | Gera os recursos web do Android |
 | `npm run android:apk` | Gera o APK de depuração no Windows |
 
@@ -90,6 +106,9 @@ Android
                                               ├──> Android Keystore
                                               ├──> arquivos cifrados
                                               └──> scanner ML Kit
+
+GitHub Pages
+      └──> React / Vite ────> API simulada ──> sessionStorage da aba
 ```
 
 No navegador, `GET /api/state` carrega o snapshot familiar e sua revisão.
@@ -169,6 +188,7 @@ app/
 ├── android/             WebView, Keystore e scanner nativos
 ├── app/                 interface React e API local
 ├── db/                  acesso ao D1 local
+├── demo/                entrada estática com API fictícia por sessão
 ├── docs/                estudo de caso, roadmap e guia público
 ├── drizzle/             schema e migração idempotente
 ├── lib/                 domínio, validação e criptografia
@@ -186,6 +206,7 @@ Cada push e pull request executa:
 - instalação reproduzível com `npm ci`;
 - typecheck e lint;
 - testes e build web;
+- build isolado da demonstração estática;
 - build dos recursos mobile;
 - compilação do APK Android;
 - varredura completa do histórico com Gitleaks.
@@ -193,14 +214,18 @@ Cada push e pull request executa:
 O repositório também mantém secret scanning, push protection, alertas de
 dependências e relatos privados de vulnerabilidade habilitados no GitHub.
 
-## Repositório público, aplicação local
+## Aplicação local, demonstração isolada
 
-O repositório é público, mas não possui GitHub Pages, homepage de demonstração
-ou configuração de deploy. `app/.openai/hosting.json` declara apenas recursos usados
-no desenvolvimento local e não contém `project_id`.
+O GitHub Pages publica somente o cliente estático de demonstração. Ele substitui
+a API por uma implementação em memória e `sessionStorage`, com dados fictícios e
+sem acesso ao D1, à chave local, a uploads ou a qualquer backend. A aplicação
+com persistência de dados de saúde continua restrita ao navegador local e ao
+Android.
 
-Essa separação permite avaliar arquitetura, qualidade e segurança sem oferecer
-um serviço público para dados de saúde. O processo está detalhado no
+`app/.openai/hosting.json` declara apenas recursos usados no desenvolvimento
+local, não contém `project_id` e não é usado para publicar a demonstração. Essa
+separação permite avaliar arquitetura, interface e qualidade sem oferecer um
+serviço público para dados de saúde. O processo está detalhado no
 [guia do projeto público](app/docs/GUIA_PROJETO_PUBLICO.md).
 
 ## Contribuindo

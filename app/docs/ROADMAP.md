@@ -1,8 +1,8 @@
 # Roadmap
 
-O roadmap registra a evolução do CuraFamília sem prometer datas. O escopo
-continua local-first: nenhuma etapa prevê hospedar a aplicação ou publicar dados
-de saúde.
+O roadmap registra a evolução do CuraFamília sem prometer datas. A aplicação e
+os dados de saúde continuam local-first; apenas uma demonstração estática e
+fictícia da interface é publicada.
 
 ## Entregue
 
@@ -20,6 +20,7 @@ de saúde.
 - [x] Temas claro e escuro persistentes
 - [x] Testes, builds reproduzíveis, CI e varredura de segredos
 - [x] Repositório público com backup privado independente
+- [x] Demonstração estática isolada no GitHub Pages com dados por sessão
 
 ## Próximas melhorias
 

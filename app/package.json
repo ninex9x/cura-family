@@ -8,10 +8,11 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "vinext build",
+    "build:demo": "vite build --config vite.demo.config.ts",
     "build:mobile": "vite build --config vite.mobile.config.ts",
     "android:apk": "npm run build:mobile && cd android && gradlew.bat assembleDebug",
     "start": "npm run dev",
-    "test": "npm run build && node --experimental-strip-types --test tests/rendered-html.test.mjs tests/health-state.test.mjs tests/server-vault.test.mjs",
+    "test": "npm run build && npm run build:demo && node --experimental-strip-types --test tests/rendered-html.test.mjs tests/health-state.test.mjs tests/server-vault.test.mjs tests/demo-api.test.mjs tests/static-demo.test.mjs",
     "typecheck": "tsc --noEmit --incremental false",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern android/**/build --ignore-pattern android/app/src/main/assets/www"
   },

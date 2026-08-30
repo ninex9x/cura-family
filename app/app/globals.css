@@ -118,6 +118,14 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .sidebar-add-button:active { transform: scale(.98); }
 
 .app-canvas { min-height: 100vh; margin-left: 256px; }
+.demo-banner { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 18px; padding: 10px 24px; border-bottom: 1px solid color-mix(in srgb, var(--primary) 28%, var(--outline)); background: var(--primary-container); color: var(--on-primary-container); }
+.demo-banner > div { display: flex; min-width: 0; align-items: center; gap: 10px; }
+.demo-banner > div > .material-symbols-outlined { flex: 0 0 auto; color: var(--primary); }
+.demo-banner span { display: grid; gap: 1px; }
+.demo-banner strong { font-size: 14px; font-weight: 750; }
+.demo-banner small { color: var(--muted); font-size: 12px; line-height: 17px; }
+.demo-banner button { flex: 0 0 auto; min-height: 36px; padding: 0 14px; border: 1px solid color-mix(in srgb, var(--primary) 48%, var(--outline)); border-radius: 999px; background: var(--surface); color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; }
+.demo-banner button:hover { background: var(--surface-high); }
 .content-container { width: min(100%, 1120px); margin: 0 auto; padding: 28px 24px 52px; }
 .mobile-topbar { display: none; }
 .greeting-section { margin-bottom: 30px; }
@@ -650,6 +658,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 @media (max-width: 767px) {
   .desktop-sidebar { display: none; }
   .app-canvas { margin-left: 0; padding-bottom: 88px; }
+  .demo-banner { align-items: flex-start; gap: 10px; padding: 10px 14px; }
+  .demo-banner small { display: block; }
+  .demo-banner button { min-height: 34px; padding: 0 11px; }
   .mobile-topbar { position: sticky; top: 0; z-index: 30; display: flex; min-height: 68px; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--topbar); backdrop-filter: blur(10px); }
   .mobile-topbar .mobile-brand { border: 0; background: transparent; color: var(--primary); font-size: 24px; font-weight: 750; letter-spacing: -.7px; }
   .mobile-header-actions { display: flex; gap: 4px; }

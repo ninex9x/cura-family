@@ -19,6 +19,8 @@ type Modal = "member" | "drug" | "presentation" | "routine" | "document" | "docu
 type Theme = "light" | "dark";
 declare global {
   interface Window {
+    CuraFamiliaDemo?: boolean;
+    CuraFamiliaResetDemo?: () => void;
     CuraFamiliaAndroid?: {
       saveDocument: (fileName: string, mimeType: string, dataUrl: string) => void;
       saveStoredDocument?: (documentId: string, fileName: string, mimeType: string) => void;
@@ -420,6 +422,7 @@ async function optimizeMemberPhoto(file: File) {
 }
 
 export default function Home() {
+  const demoMode = typeof window !== "undefined" && window.CuraFamiliaDemo === true;
   const [view, setView] = useState<View>("today");
   const [modal, setModal] = useState<Modal>(null);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
@@ -1016,6 +1019,10 @@ export default function Home() {
       </aside>
 
       <section className="app-canvas">
+        {demoMode && <section className="demo-banner" aria-label="Modo demonstração">
+          <div><Icon>science</Icon><span><strong>Modo demonstração</strong><small>Use somente dados fictícios. As alterações ficam nesta aba e são apagadas ao encerrar a sessão.</small></span></div>
+          <button type="button" onClick={() => window.CuraFamiliaResetDemo?.()}>Redefinir dados</button>
+        </section>}
         <header className={`mobile-topbar ${view === "family" || view === "medicines" || view === "documents" ? "action-mobile-topbar" : ""}`}>
           <button className="mobile-brand" onClick={() => navigate("today")}>CuraFamília</button>
           {view === "family" || view === "medicines" || view === "documents" ? <div className="mobile-header-actions">
